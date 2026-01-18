@@ -2845,7 +2845,6 @@ GameObject:
   - component: {fileID: 4342705007051620905}
   - component: {fileID: 9161893536050681317}
   - component: {fileID: 6474532308793055957}
-  - component: {fileID: 2241686658351792030}
   - component: {fileID: 25660225491306045}
   m_Layer: 0
   m_Name: Stator
@@ -3360,23 +3359,6 @@ MonoBehaviour:
   m_LimitAngularVelocity: 0
   m_MaxLinearVelocityDelta: 10
   m_MaxAngularVelocityDelta: 20
---- !u!114 &2241686658351792030
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 767685702623541223}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6173649fcccad164594ec869b1280c09, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  infoCanvas: {fileID: 0}
-  ropeRenderer: {fileID: 0}
-  ropeAnchor: {fileID: 0}
-  canvasAnchor: {fileID: 0}
-  audioSource: {fileID: 0}
 --- !u!120 &25660225491306045
 LineRenderer:
   serializedVersion: 2
@@ -13798,6 +13780,8 @@ MonoBehaviour:
   ropeAnchor: {fileID: 0}
   canvasAnchor: {fileID: 0}
   audioSource: {fileID: 0}
+  objeBilgiMetni: 
+  objeSesDosyasi: {fileID: 0}
 --- !u!120 &1750543338551372583
 LineRenderer:
   serializedVersion: 2
@@ -23598,6 +23582,8 @@ MonoBehaviour:
   ropeAnchor: {fileID: 0}
   canvasAnchor: {fileID: 0}
   audioSource: {fileID: 0}
+  objeBilgiMetni: 
+  objeSesDosyasi: {fileID: 0}
 --- !u!120 &7014871882936565138
 LineRenderer:
   serializedVersion: 2
@@ -24564,11 +24550,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6173649fcccad164594ec869b1280c09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  infoCanvas: {fileID: 0}
+  infoCanvas: {fileID: 4814860044762000532, guid: 8b52019c2ddeed54aa9a13c0af5f382f, type: 3}
   ropeRenderer: {fileID: 0}
   ropeAnchor: {fileID: 0}
   canvasAnchor: {fileID: 0}
   audioSource: {fileID: 0}
+  objeBilgiMetni: 
+  objeSesDosyasi: {fileID: 0}
 --- !u!120 &3526384250185035067
 LineRenderer:
   serializedVersion: 2
