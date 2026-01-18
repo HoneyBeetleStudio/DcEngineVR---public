@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Tıklama için
-using TMPro; // TextMeshPro için
+using UnityEngine.InputSystem; 
+using TMPro; 
 
 public class MotorKontrol : MonoBehaviour
 {
@@ -28,13 +28,13 @@ public class MotorKontrol : MonoBehaviour
 
     void Update()
     {
-        // Pervane Dönüşü
+        
         if (motorAcik && pervaneObjesi != null)
         {
             pervaneObjesi.Rotate(donusYonVektoru * donusHizi * Time.deltaTime, Space.Self);
         }
 
-        // Tıklama (Sol Tık)
+       
         if (uzerineBakiliyor && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) 
         {
             DurumuDegistir();
@@ -49,7 +49,7 @@ public class MotorKontrol : MonoBehaviour
 
     void GorselleriGuncelle()
     {
-        // ÖNCE YAZI RENGİNİ SABİTLE (Her zaman Siyah)
+        
         if (durumYazisi != null)
         {
             durumYazisi.color = Color.black; 
@@ -57,27 +57,27 @@ public class MotorKontrol : MonoBehaviour
 
         if (motorAcik)
         {
-            // --- AÇIK DURUMU ---
+            
             if(durumYazisi != null) durumYazisi.text = "ÇALIŞIYOR";
             
-            // Sadece butonun malzemesi yeşil olsun (Yazı siyah kalır)
+            
             if(butonRenderer != null) butonRenderer.material = yesilMat;
 
             Debug.Log("DURUM: Motor Çalışıyor");
         }
         else
         {
-            // --- KAPALI DURUMU ---
+         
             if(durumYazisi != null) durumYazisi.text = "DURDU";
 
-            // Sadece butonun malzemesi kırmızı olsun
+           
             if(butonRenderer != null) butonRenderer.material = kirmiziMat;
 
             Debug.Log("DURUM: Motor Durdu");
         }
     }
 
-    // --- XR Olayları ---
+    
     public void HoverGiris() { uzerineBakiliyor = true; }
     public void HoverCikis() { uzerineBakiliyor = false; }
 }
