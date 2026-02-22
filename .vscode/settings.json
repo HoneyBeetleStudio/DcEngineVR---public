@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "unity63VR.slnx"
+    "dotnet.defaultSolution": "DcEngineVR.slnx"
 }
