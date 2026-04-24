@@ -4342,6 +4342,24 @@ Transform:
   - {fileID: 6683273851316004919}
   m_Father: {fileID: 2604266572687158547}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: -90}
+--- !u!1 &450054310034701857
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 969745814671860891}
+  - component: {fileID: 4240949644588165950}
+  - component: {fileID: 2107146357120688116}
+  m_Layer: 0
+  m_Name: Elevator Buttons
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!4 &454764694917522132
 Transform:
   m_ObjectHideFlags: 0
@@ -5056,6 +5074,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3549900213733039049}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &969745814671860891
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450054310034701857}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.5, y: -0.5, z: -0.5, w: 0.5}
+  m_LocalPosition: {x: -48.72, y: 11.885, z: -5.31}
+  m_LocalScale: {x: 585.7335, y: 585.7335, z: 585.7335}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: -90}
 --- !u!33 &991921025321709037
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -5798,6 +5831,58 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!23 &2107146357120688116
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450054310034701857}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 2cea6492e3cc3084495d334c8b98868f, type: 2}
+  - {fileID: 2100000, guid: 09455cf146b8c5c45900299b157196fc, type: 2}
+  - {fileID: 2100000, guid: 3f73de1be59a08d4ca12a068411809d6, type: 2}
+  - {fileID: 2100000, guid: c901d41546024324eb01169ddd5a7a2a, type: 2}
+  - {fileID: 2100000, guid: 8067a8d29f3b0ae449411e1d7372b053, type: 2}
+  - {fileID: 2100000, guid: c0236f12c8dc3444799e39786c632b9d, type: 2}
+  - {fileID: 2100000, guid: 3a69b2af8a6fc6d44b0814e65eeb5873, type: 2}
+  - {fileID: 2100000, guid: a0050bd49ac44d1499367401e9f4a826, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &2205907887464409444
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -7519,6 +7604,14 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8732149905596432386, guid: 89bd0802ffca5484284e721118cea7a7, type: 3}
   m_PrefabInstance: {fileID: 4484330480996272539}
   m_PrefabAsset: {fileID: 0}
+--- !u!33 &4240949644588165950
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 450054310034701857}
+  m_Mesh: {fileID: -2110900342053813070, guid: 79c8e7d3816d22a45b6175988b7cf71d, type: 3}
 --- !u!1 &4244026470592118543
 GameObject:
   m_ObjectHideFlags: 0
@@ -73025,3 +73118,4 @@ SceneRoots:
   - {fileID: 1531177153}
   - {fileID: 8965521736156046584}
   - {fileID: 1279627867}
+  - {fileID: 969745814671860891}
