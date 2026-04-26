@@ -29,10 +29,15 @@ public class ManualConnectPlug : MonoBehaviour
     public TextMeshProUGUI uiTextOutput;
     public float messageDuration = 3f;
 
+    [Header("Ayrılma Ayarları")]
+    [Tooltip("Bağlandıktan kaç saniye sonra otomatik ayrılsın? (0 ise otomatik ayrılmaz)")]
+    public float autoDisconnectTime = 3f;
+
     private XRGrabInteractable _grab;
     private Rigidbody _rb;
     private bool _isConnected = false;
     private Coroutine _messageCoroutine;
+    private Coroutine _disconnectCoroutine;
     
     private Renderer[] _highlightRenderers;
     private Color[] _originalColors;
@@ -49,6 +54,15 @@ public class ManualConnectPlug : MonoBehaviour
             _highlightRenderers = targetHighlight.GetComponentsInChildren<Renderer>();
             StoreOriginalColors();
             targetHighlight.SetActive(false);
+        }
+
+        // Event listener'ları burada da güvenli şekilde ekleyelim
+        if (_grab != null)
+        {
+            _grab.selectEntered.RemoveListener(OnGrabbed);
+            _grab.selectExited.RemoveListener(OnReleased);
+            _grab.selectEntered.AddListener(OnGrabbed);
+            _grab.selectExited.AddListener(OnReleased);
         }
     }
 
@@ -104,6 +118,24 @@ public class ManualConnectPlug : MonoBehaviour
                     if (!_originalEmissionEnabled[i]) mat.DisableKeyword("_EMISSION");
                 }
             }
+        }
+    }
+
+    private void OnEnable()
+    {
+        if (_grab != null)
+        {
+            _grab.selectEntered.AddListener(OnGrabbed);
+            _grab.selectExited.AddListener(OnReleased);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_grab != null)
+        {
+            _grab.selectEntered.RemoveListener(OnGrabbed);
+            _grab.selectExited.RemoveListener(OnReleased);
         }
     }
 
@@ -176,6 +208,39 @@ public class ManualConnectPlug : MonoBehaviour
         // Highlight kapat
         if (targetHighlight != null)
             targetHighlight.SetActive(false);
+
+        // Otomatik ayrılma süresi ayarlanmışsa başlat
+        if (autoDisconnectTime > 0)
+        {
+            if (_disconnectCoroutine != null) StopCoroutine(_disconnectCoroutine);
+            _disconnectCoroutine = StartCoroutine(AutoDisconnectCoroutine());
+        }
+    }
+
+    private IEnumerator AutoDisconnectCoroutine()
+    {
+        yield return new WaitForSeconds(autoDisconnectTime);
+        DisconnectFromSocket();
+    }
+
+    private void DisconnectFromSocket()
+    {
+        if (!_isConnected) return;
+
+        _isConnected = false;
+
+        // Fiziği ve etkileşimi geri aç
+        if (_rb != null)
+        {
+            _rb.isKinematic = false;
+        }
+        _grab.enabled = true;
+
+        // Parent'tan çıkar
+        transform.SetParent(null);
+
+        // İsteğe bağlı olarak ayrıldığında da bir mesaj gösterebilirsiniz
+        // ShowMessage("Kablo Ayrıldı");
     }
 
     private void ShowMessage(string msg)

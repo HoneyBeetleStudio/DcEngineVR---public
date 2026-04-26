@@ -2,38 +2,120 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-[RequireComponent(typeof(Collider))]
 public class SnapTarget : MonoBehaviour
 {
     public Transform snappableObject;
     public bool isConnected;
     public Vector3 snapLocalOffset = Vector3.zero;
-    public float snapRange = 0.5f;
-    public bool debugLog;
+    public float snapRange = 0.3f;
 
-    private HashSet<XRGrabInteractable> _triggerIcindekiler = new HashSet<XRGrabInteractable>();
-    private HashSet<XRGrabInteractable> _dinlenenler = new HashSet<XRGrabInteractable>();
+    [Header("Magnet")]
+    public bool magnetEffect = true;
+    public float magnetDuration = 0.15f;
+
+    [Header("Highlight")]
+    public GameObject highlightObject;
+    public bool emissionHighlight = true;
+    public Color highlightColor = Color.green;
+    [Range(0, 5)] public float emissionSiddeti = 2f;
+
+    private Renderer[] _highlightRenderers;
+    private Color[] _originalColors;
+    private Color[] _originalEmissionColors;
+    private bool[] _originalEmissionEnabled;
+
     private Transform _snappedObject;
     private XRGrabInteractable _snappedInteractable;
+    private bool _isMagnetizing = false;
 
-    private static bool SnappableEslesiyor(Transform snappable, Transform other)
+    private static KabloGrabHighlight[] _cachedKablolar;
+    private static float _cacheZamani;
+
+    private void Awake()
     {
-        if (snappable == null) return true;
-        return other == snappable || other.IsChildOf(snappable);
+        if (emissionHighlight)
+        {
+            _highlightRenderers = GetComponentsInChildren<Renderer>();
+            StoreOriginalColors();
+        }
+
+        if (highlightObject != null)
+        {
+            if (highlightObject == gameObject)
+                highlightObject = null;
+            else
+                highlightObject.SetActive(false);
+        }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void StoreOriginalColors()
     {
-        if (!SnappableEslesiyor(snappableObject, other.transform)) return;
-        var grab = other.GetComponentInParent<XRGrabInteractable>();
-        if (grab == null) return;
-        _triggerIcindekiler.Add(grab);
-        if (!_dinlenenler.Contains(grab))
+        if (_highlightRenderers == null) return;
+
+        _originalColors = new Color[_highlightRenderers.Length];
+        _originalEmissionColors = new Color[_highlightRenderers.Length];
+        _originalEmissionEnabled = new bool[_highlightRenderers.Length];
+
+        for (int i = 0; i < _highlightRenderers.Length; i++)
         {
-            _dinlenenler.Add(grab);
-            grab.selectExited.AddListener(ObjeyiBirakildi);
-            if (debugLog) Debug.Log($"[SnapTarget] Trigger'a girdi: {grab.name}", this);
+            if (_highlightRenderers[i].material.HasProperty("_BaseColor"))
+                _originalColors[i] = _highlightRenderers[i].material.GetColor("_BaseColor");
+            else if (_highlightRenderers[i].material.HasProperty("_Color"))
+                _originalColors[i] = _highlightRenderers[i].material.GetColor("_Color");
+
+            if (_highlightRenderers[i].material.HasProperty("_EmissionColor"))
+            {
+                _originalEmissionColors[i] = _highlightRenderers[i].material.GetColor("_EmissionColor");
+                _originalEmissionEnabled[i] = _highlightRenderers[i].material.IsKeywordEnabled("_EMISSION");
+            }
+        }
+    }
+
+    public void HighlightAc()
+    {
+        if (isConnected) return;
+
+        if (highlightObject != null)
+            highlightObject.SetActive(true);
+
+        if (emissionHighlight && _highlightRenderers != null)
+        {
+            for (int i = 0; i < _highlightRenderers.Length; i++)
+            {
+                Material mat = _highlightRenderers[i].material;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", highlightColor);
+                else if (mat.HasProperty("_Color")) mat.SetColor("_Color", highlightColor);
+
+                if (mat.HasProperty("_EmissionColor"))
+                {
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", highlightColor * emissionSiddeti);
+                }
+            }
+        }
+    }
+
+    public void HighlightKapat()
+    {
+        if (highlightObject != null)
+            highlightObject.SetActive(false);
+
+        if (emissionHighlight && _highlightRenderers != null)
+        {
+            for (int i = 0; i < _highlightRenderers.Length; i++)
+            {
+                Material mat = _highlightRenderers[i].material;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", _originalColors[i]);
+                else if (mat.HasProperty("_Color")) mat.SetColor("_Color", _originalColors[i]);
+
+                if (mat.HasProperty("_EmissionColor"))
+                {
+                    mat.SetColor("_EmissionColor", _originalEmissionColors[i]);
+                    if (!_originalEmissionEnabled[i]) mat.DisableKeyword("_EMISSION");
+                }
+            }
         }
     }
 
@@ -42,11 +124,21 @@ public class SnapTarget : MonoBehaviour
         if (_snappedObject != null)
         {
             Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);
-            float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
-            if (distFromSnap > 0.15f)
+
+            if ((_snappedInteractable == null || !_snappedInteractable.isSelected) && !_isMagnetizing)
             {
-                if (debugLog) Debug.Log($"[SnapTarget] (Update) Obje zorla çekildi, ayrılıyor. Fark: {distFromSnap:F2}", this);
-                Ayir(_snappedObject);
+                if (Vector3.Distance(_snappedObject.position, beklenenPozisyon) > 0.001f)
+                    _snappedObject.position = beklenenPozisyon;
+
+                if (Quaternion.Angle(_snappedObject.rotation, transform.rotation) > 0.1f)
+                    _snappedObject.rotation = transform.rotation;
+            }
+
+            if (!_isMagnetizing)
+            {
+                float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
+                if (distFromSnap > 0.15f)
+                    Ayir(_snappedObject);
             }
             return;
         }
@@ -54,72 +146,41 @@ public class SnapTarget : MonoBehaviour
         if (snappableObject != null)
         {
             var grab = snappableObject.GetComponent<XRGrabInteractable>();
-            if (grab != null && !grab.isSelected)
+            if (grab != null && grab.isSelected)
             {
                 float dist = Vector3.Distance(snappableObject.position, transform.position);
                 if (dist <= snapRange)
                 {
-                    if (debugLog) Debug.Log($"[SnapTarget] (Update) Mesafe uygun ve tutulmuyor, snap yapılıyor. Mesafe={dist:F2}", this);
                     SnapYap(snappableObject);
                     return;
                 }
             }
         }
-
-        foreach (var grab in _triggerIcindekiler)
+        else
         {
-            if (grab != null && !grab.isSelected)
+            if (Time.time - _cacheZamani > 0.5f)
             {
-                if (debugLog) Debug.Log($"[SnapTarget] (Update) Trigger içinde ve tutulmuyor, snap yapılıyor: {grab.name}", this);
-                SnapYap(grab.transform);
-                return;
+                _cachedKablolar = FindObjectsByType<KabloGrabHighlight>(FindObjectsSortMode.None);
+                _cacheZamani = Time.time;
+            }
+
+            if (_cachedKablolar != null)
+            {
+                foreach (var kablo in _cachedKablolar)
+                {
+                    if (kablo == null) continue;
+                    var grab = kablo.GetComponent<XRGrabInteractable>();
+                    if (grab == null || !grab.isSelected) continue;
+
+                    float dist = Vector3.Distance(kablo.transform.position, transform.position);
+                    if (dist <= snapRange)
+                    {
+                        SnapYap(kablo.transform);
+                        return;
+                    }
+                }
             }
         }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!SnappableEslesiyor(snappableObject, other.transform)) return;
-        var grab = other.GetComponentInParent<XRGrabInteractable>();
-        if (grab == null) return;
-        _triggerIcindekiler.Remove(grab);
-    }
-
-    private void ObjeyiBirakildi(SelectExitEventArgs args)
-    {
-        if (_snappedObject != null) return;
-
-        Transform releasedTransform = null;
-        XRGrabInteractable interactable = args.interactableObject as XRGrabInteractable;
-        if (interactable != null)
-            releasedTransform = interactable.transform;
-        else if (args.interactableObject is Component c)
-            releasedTransform = c.transform;
-
-        if (releasedTransform == null)
-        {
-            if (debugLog) Debug.Log("[SnapTarget] Bırakıldı ama interactable transform bulunamadı.", this);
-            return;
-        }
-        if (!SnappableEslesiyor(snappableObject, releasedTransform))
-            return;
-
-        float dist = Vector3.Distance(releasedTransform.position, transform.position);
-        bool triggerIciydi = interactable != null && _dinlenenler.Contains(interactable);
-        if (!triggerIciydi && dist > snapRange)
-        {
-            if (debugLog) Debug.Log($"[SnapTarget] Bırakıldı ama mesafe fazla: {dist:F2} > {snapRange}.", this);
-            return;
-        }
-
-        if (debugLog) Debug.Log($"[SnapTarget] Bırakıldı, mesafe={dist:F2}, snap yapılıyor.", this);
-        var grabToRemove = interactable ?? releasedTransform.GetComponent<XRGrabInteractable>();
-        if (grabToRemove != null)
-        {
-            _dinlenenler.Remove(grabToRemove);
-            grabToRemove.selectExited.RemoveListener(ObjeyiBirakildi);
-        }
-        SnapYap(releasedTransform);
     }
 
     private void SnapYap(Transform obj)
@@ -136,16 +197,60 @@ public class SnapTarget : MonoBehaviour
 
         _snappedObject = obj;
         _snappedInteractable = obj.GetComponent<XRGrabInteractable>();
+        isConnected = true;
+
         if (_snappedInteractable != null)
+        {
             _snappedInteractable.selectEntered.AddListener(TutuluncaAyir);
 
-        obj.SetParent(transform);
-        obj.localPosition = snapLocalOffset;
-        obj.localRotation = Quaternion.identity;
-        obj.localScale = Vector3.one;
+            if (_snappedInteractable.isSelected)
+            {
+                var interactor = _snappedInteractable.firstInteractorSelecting;
+                if (interactor != null)
+                {
+                    var mgr = _snappedInteractable.interactionManager;
+                    if (mgr != null)
+                        mgr.SelectCancel((IXRSelectInteractor)interactor, (IXRSelectInteractable)_snappedInteractable);
+                }
+            }
 
-        isConnected = true;
-        if (debugLog) Debug.Log("[SnapTarget] Yapıştı: " + obj.name, this);
+            _snappedInteractable.trackPosition = false;
+            _snappedInteractable.trackRotation = false;
+        }
+        HighlightKapat();
+
+        if (magnetEffect)
+            StartCoroutine(MagnetRoutine(obj));
+        else
+        {
+            obj.position = transform.TransformPoint(snapLocalOffset);
+            obj.rotation = transform.rotation;
+        }
+    }
+
+    private System.Collections.IEnumerator MagnetRoutine(Transform obj)
+    {
+        _isMagnetizing = true;
+
+        Vector3 startPos = obj.position;
+        Quaternion startRot = obj.rotation;
+        float t = 0;
+
+        while (t < magnetDuration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.SmoothStep(0, 1, t / magnetDuration);
+
+            obj.position = Vector3.Lerp(startPos, transform.TransformPoint(snapLocalOffset), n);
+            obj.rotation = Quaternion.Slerp(startRot, transform.rotation, n);
+
+            yield return null;
+        }
+
+        obj.position = transform.TransformPoint(snapLocalOffset);
+        obj.rotation = transform.rotation;
+
+        _isMagnetizing = false;
     }
 
     public void Ayir(Transform snappedObj)
@@ -153,19 +258,20 @@ public class SnapTarget : MonoBehaviour
         if (_snappedObject != snappedObj) return;
 
         if (_snappedInteractable != null)
+        {
             _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
+            _snappedInteractable.trackPosition = true;
+            _snappedInteractable.trackRotation = true;
+        }
 
         var rb = snappedObj.GetComponent<Rigidbody>();
         if (rb != null && (_snappedInteractable == null || !_snappedInteractable.isSelected))
             rb.isKinematic = false;
 
-        if (snappedObj.parent == transform)
-            snappedObj.SetParent(null);
-
+        _isMagnetizing = false;
         _snappedObject = null;
         _snappedInteractable = null;
         isConnected = false;
-        if (debugLog) Debug.Log("[SnapTarget] Ayrıldı: " + snappedObj.name, this);
     }
 
     private void TutuluncaAyir(SelectEnterEventArgs args)
@@ -176,11 +282,6 @@ public class SnapTarget : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (var g in _dinlenenler)
-        {
-            if (g != null)
-                g.selectExited.RemoveListener(ObjeyiBirakildi);
-        }
         if (_snappedInteractable != null)
             _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
     }
