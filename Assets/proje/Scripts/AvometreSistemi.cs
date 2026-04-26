@@ -36,11 +36,19 @@ public class AvometreSistemi : MonoBehaviour
 
   public int tamamlananTestSayisi = 0;
 
-private void KontrolEt()
-{
-    if (prob1Pin == null || prob2Pin == null) return;
+    private void KontrolEt()
+    {
+        if (prob1Pin == null || prob2Pin == null)
+        {
+            if (anaEkranText != null)
+            {
+                anaEkranText.text = "---";
+                anaEkranText.color = Color.white;
+            }
+            return;
+        }
 
-    if (prob1Pin.grupAdi == prob2Pin.grupAdi)
+        if (prob1Pin.grupAdi == prob2Pin.grupAdi)
     {
         anaEkranText.text = "EVET";
         anaEkranText.color = Color.green;        

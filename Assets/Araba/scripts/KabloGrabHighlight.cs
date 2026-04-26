@@ -75,6 +75,12 @@ public class KabloGrabHighlight : MonoBehaviour
             }
         }
 
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
+
         bool birSoketeBaglandi = false;
         if (snapTargetlar != null)
         {

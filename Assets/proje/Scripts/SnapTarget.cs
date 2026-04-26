@@ -174,22 +174,46 @@ public int probNumarasi;
 }
 
 
-private bool TrySnapObject(Transform target)
-{
-    var grab = target.GetComponent<XRGrabInteractable>();
-    Rigidbody rb = target.GetComponent<Rigidbody>();
+    private static List<SnapTarget> _tumSnapTargetlar = new List<SnapTarget>();
 
-    if (grab == null || rb == null) return false;
-    
-    if (rb.isKinematic && !grab.isSelected) 
-    {       
-        return false; 
+    private void OnEnable()
+    {
+        if (!_tumSnapTargetlar.Contains(this))
+            _tumSnapTargetlar.Add(this);
     }
 
-    
-    if (!grab.isSelected)
+    private void OnDisable()
     {
-        float dist = Vector3.Distance(target.position, transform.position);
+        if (_tumSnapTargetlar.Contains(this))
+            _tumSnapTargetlar.Remove(this);
+    }
+
+    private bool BaskaBirTargetaBagliMi(Transform obj)
+    {
+        foreach (var target in _tumSnapTargetlar)
+        {
+            if (target != null && target != this && target._snappedObject == obj)
+                return true;
+        }
+        return false;
+    }
+
+    private bool TrySnapObject(Transform target)
+    {
+        var grab = target.GetComponent<XRGrabInteractable>();
+        Rigidbody rb = target.GetComponent<Rigidbody>();
+
+        if (grab == null || rb == null) return false;
+        
+        if (BaskaBirTargetaBagliMi(target)) 
+        {       
+            return false; 
+        }
+
+        
+        if (!grab.isSelected)
+        {
+            float dist = Vector3.Distance(target.position, transform.position);
         if (dist <= snapRange)
         {
             SnapYap(target);
@@ -298,6 +322,11 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     if (avo != null) avo.BaglantiKopart(probNumarasi);
     
+    if (mesajText != null)
+    {
+        mesajText.gameObject.SetActive(false);
+    }
+
     var rb = snappedObj.GetComponent<Rigidbody>();
     if (rb != null)
     {

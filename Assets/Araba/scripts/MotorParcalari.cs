@@ -118,10 +118,10 @@ public class MotorParcalari : MonoBehaviour
             if (diger == null || diger == this) continue;
             foreach (var ca in _benimColliderlarim)
             {
-                if (ca == null) continue;
+                if (ca == null || !ca.enabled || !ca.gameObject.activeInHierarchy) continue;
                 foreach (var cb in diger._benimColliderlarim)
                 {
-                    if (cb == null || ca == cb) continue;
+                    if (cb == null || ca == cb || !cb.enabled || !cb.gameObject.activeInHierarchy) continue;
                     Physics.IgnoreCollision(ca, cb, true);
                 }
             }
@@ -138,10 +138,10 @@ public class MotorParcalari : MonoBehaviour
             if (diger == null || diger == this) continue;
             foreach (var ca in _benimColliderlarim)
             {
-                if (ca == null) continue;
+                if (ca == null || !ca.enabled || !ca.gameObject.activeInHierarchy) continue;
                 foreach (var cb in diger._benimColliderlarim)
                 {
-                    if (cb == null || ca == cb) continue;
+                    if (cb == null || ca == cb || !cb.enabled || !cb.gameObject.activeInHierarchy) continue;
                     Physics.IgnoreCollision(ca, cb, false);
                 }
             }
