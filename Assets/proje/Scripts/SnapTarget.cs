@@ -6,10 +6,16 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class SnapTarget : MonoBehaviour
 {
+
+    [Header("Avometre Ayarı")]
+public int probNumarasi;
+
     public Transform snappableObject;
     public bool isConnected;
     public Vector3 snapLocalOffset = Vector3.zero;
     public float snapRange = 0.3f;
+    [Header("UI Mesaj Ayarı")]
+    public TMPro.TextMeshProUGUI mesajText;
 
     [Header("Magnet")]
     public bool magnetEffect = true;
@@ -119,73 +125,84 @@ public class SnapTarget : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (_snappedObject != null)
+   private void Update()
+{   
+    if (_snappedObject != null)
+    {        
+        if (_snappedInteractable != null && _snappedInteractable.isSelected)
         {
-            Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);
-
-            if ((_snappedInteractable == null || !_snappedInteractable.isSelected) && !_isMagnetizing)
-            {
-                if (Vector3.Distance(_snappedObject.position, beklenenPozisyon) > 0.001f)
-                    _snappedObject.position = beklenenPozisyon;
-
-                if (Quaternion.Angle(_snappedObject.rotation, transform.rotation) > 0.1f)
-                    _snappedObject.rotation = transform.rotation;
-            }
-
-            if (!_isMagnetizing)
-            {
-                float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
-                if (distFromSnap > 0.15f)
-                    Ayir(_snappedObject);
-            }
+            Ayir(_snappedObject);
             return;
         }
-
-        if (snappableObject != null)
+        Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);     
+        if (!_isMagnetizing)
         {
-            var grab = snappableObject.GetComponent<XRGrabInteractable>();
-            if (grab != null && grab.isSelected)
-            {
-                float dist = Vector3.Distance(snappableObject.position, transform.position);
-                if (dist <= snapRange)
-                {
-                    SnapYap(snappableObject);
-                    return;
-                }
-            }
+            if (Vector3.Distance(_snappedObject.position, beklenenPozisyon) > 0.001f)
+                _snappedObject.position = beklenenPozisyon;
+
+            if (Quaternion.Angle(_snappedObject.rotation, transform.rotation) > 0.1f)
+                _snappedObject.rotation = transform.rotation;
+           
+            float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
+            if (distFromSnap > 0.15f)
+                Ayir(_snappedObject);
         }
-        else
+        return;
+    }
+
+    if (snappableObject != null)
+    {
+        TrySnapObject(snappableObject);
+    }
+    else
+    {      
+        if (Time.time - _cacheZamani > 0.5f)
         {
-            if (Time.time - _cacheZamani > 0.5f)
-            {
-                _cachedKablolar = FindObjectsByType<KabloGrabHighlight>(FindObjectsSortMode.None);
-                _cacheZamani = Time.time;
-            }
+            _cachedKablolar = FindObjectsByType<KabloGrabHighlight>(FindObjectsSortMode.None);
+            _cacheZamani = Time.time;
+        }
 
-            if (_cachedKablolar != null)
+        if (_cachedKablolar != null)
+        {
+            foreach (var kablo in _cachedKablolar)
             {
-                foreach (var kablo in _cachedKablolar)
-                {
-                    if (kablo == null) continue;
-                    var grab = kablo.GetComponent<XRGrabInteractable>();
-                    if (grab == null || !grab.isSelected) continue;
-
-                    float dist = Vector3.Distance(kablo.transform.position, transform.position);
-                    if (dist <= snapRange)
-                    {
-                        SnapYap(kablo.transform);
-                        return;
-                    }
-                }
+                if (kablo == null) continue;
+                if (TrySnapObject(kablo.transform)) break; 
             }
         }
     }
+}
+
+
+private bool TrySnapObject(Transform target)
+{
+    var grab = target.GetComponent<XRGrabInteractable>();
+    Rigidbody rb = target.GetComponent<Rigidbody>();
+
+    if (grab == null || rb == null) return false;
+    
+    if (rb.isKinematic && !grab.isSelected) 
+    {       
+        return false; 
+    }
+
+    
+    if (!grab.isSelected)
+    {
+        float dist = Vector3.Distance(target.position, transform.position);
+        if (dist <= snapRange)
+        {
+            SnapYap(target);
+            return true;
+        }
+    }
+    return false;
+}
 
     private void SnapYap(Transform obj)
     {
         if (_snappedObject != null) return;
+        if (obj.parent != null && obj.parent.GetComponent<SnapTarget>() != null) return;
 
         var rb = obj.GetComponent<Rigidbody>();
         if (rb != null)
@@ -198,6 +215,16 @@ public class SnapTarget : MonoBehaviour
         _snappedObject = obj;
         _snappedInteractable = obj.GetComponent<XRGrabInteractable>();
         isConnected = true;
+
+        
+    if (obj.name.ToLower().Contains("fis1") && mesajText != null)
+    {      
+        mesajText.gameObject.SetActive(true);      
+        if (gameObject.name.ToLower().Contains("fisyeri1"))
+        {
+            mesajText.text = "Gerilim Var";           
+        }
+    }
 
         if (_snappedInteractable != null)
         {
@@ -226,6 +253,17 @@ public class SnapTarget : MonoBehaviour
             obj.position = transform.TransformPoint(snapLocalOffset);
             obj.rotation = transform.rotation;
         }
+
+       
+AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
+    PinKimligi pin = GetComponent<PinKimligi>();
+
+    if (avo != null && pin != null)
+    {        
+        avo.BaglantiGuncelle(probNumarasi, pin);
+    }
+
+      
     }
 
     private System.Collections.IEnumerator MagnetRoutine(Transform obj)
@@ -253,26 +291,32 @@ public class SnapTarget : MonoBehaviour
         _isMagnetizing = false;
     }
 
-    public void Ayir(Transform snappedObj)
+  public void Ayir(Transform snappedObj)
+{
+    if (_snappedObject == null || _snappedObject != snappedObj) return;
+    
+    AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
+    if (avo != null) avo.BaglantiKopart(probNumarasi);
+    
+    var rb = snappedObj.GetComponent<Rigidbody>();
+    if (rb != null)
     {
-        if (_snappedObject != snappedObj) return;
-
-        if (_snappedInteractable != null)
-        {
-            _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
-            _snappedInteractable.trackPosition = true;
-            _snappedInteractable.trackRotation = true;
-        }
-
-        var rb = snappedObj.GetComponent<Rigidbody>();
-        if (rb != null && (_snappedInteractable == null || !_snappedInteractable.isSelected))
-            rb.isKinematic = false;
-
-        _isMagnetizing = false;
-        _snappedObject = null;
-        _snappedInteractable = null;
-        isConnected = false;
+        rb.isKinematic = false; 
+        rb.useGravity = true;  
     }
+   
+    if (_snappedInteractable != null)
+    {
+        _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
+        _snappedInteractable.trackPosition = true;
+        _snappedInteractable.trackRotation = true;
+    }
+
+    _snappedObject = null;
+    _snappedInteractable = null;
+    isConnected = false;
+    Debug.Log(gameObject.name + " pini tamamen serbest bıraktı.");
+}
 
     private void TutuluncaAyir(SelectEnterEventArgs args)
     {
