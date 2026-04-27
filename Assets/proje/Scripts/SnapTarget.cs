@@ -79,18 +79,29 @@ public int probNumarasi;
         }
     }
 
-    public void HighlightAc()
+   public void HighlightAc()
+{
+    if (isConnected) return;
+
+    // 1. ADIM: Highlight objesini görünür yap
+    if (highlightObject != null && highlightObject != gameObject)
     {
-        if (isConnected) return;
-
-        if (highlightObject != null)
-            highlightObject.SetActive(true);
-
-        if (emissionHighlight && _highlightRenderers != null)
+        highlightObject.SetActive(true);
+        
+        // Eğer renderer listesi boşsa, aktif olduğunda tekrar bulmaya çalış
+        if (_highlightRenderers == null || _highlightRenderers.Length == 0)
         {
-            for (int i = 0; i < _highlightRenderers.Length; i++)
+            _highlightRenderers = highlightObject.GetComponentsInChildren<Renderer>(true);
+        }
+    }
+
+    // 2. ADIM: Renkleri yak (Emission)
+    if (emissionHighlight && _highlightRenderers != null)
+    {
+        foreach (var rend in _highlightRenderers)
+        {
+            foreach (var mat in rend.materials) // Birden fazla materyal olabilir
             {
-                Material mat = _highlightRenderers[i].material;
                 if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", highlightColor);
                 else if (mat.HasProperty("_Color")) mat.SetColor("_Color", highlightColor);
 
@@ -102,6 +113,7 @@ public int probNumarasi;
             }
         }
     }
+}
 
     public void HighlightKapat()
     {
