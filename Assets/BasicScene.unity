@@ -816,11 +816,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbceecb52a4078c4194f6b8169787a35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  probNumarasi: 0
   snappableObject: {fileID: 917515320}
   isConnected: 0
   snapLocalOffset: {x: 0, y: 0, z: 0}
   snapRange: 0.5
-  debugLog: 1
+  mesajText: {fileID: 0}
+  magnetEffect: 1
+  magnetDuration: 0.15
+  highlightObject: {fileID: 0}
+  emissionHighlight: 1
+  highlightColor: {r: 0, g: 1, b: 0, a: 1}
+  emissionSiddeti: 2
 --- !u!65 &115955320
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1489,8 +1496,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f3b631bdad4af4681e3abcb0e29414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parlamaMateryali: {fileID: 2100000, guid: 6ce5b8d671d43964ea6ea055aa98fc1f, type: 2}
-  grabInteractable: {fileID: 0}
 --- !u!1 &194202640
 GameObject:
   m_ObjectHideFlags: 0
@@ -4653,6 +4658,10 @@ PrefabInstance:
       propertyPath: m_ClearFlags
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 942810691211101373, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: m_InteractionManager
+      value: 
+      objectReference: {fileID: 756192407}
     - target: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_Name
       value: XR Origin (XR Rig)
@@ -4713,6 +4722,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5033801203051696737, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5944131804917401860, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -4721,13 +4734,21 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6520291404937146767, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 6232745470614056083, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1767192433, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1401129079}
+    - targetCorrespondingSourceObject: {fileID: 1767192433, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1401129087}
   m_SourcePrefab: {fileID: 100100000, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
 --- !u!114 &446458107 stripped
 MonoBehaviour:
@@ -9279,8 +9300,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f3b631bdad4af4681e3abcb0e29414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parlamaMateryali: {fileID: 2100000, guid: 6ce5b8d671d43964ea6ea055aa98fc1f, type: 2}
-  grabInteractable: {fileID: 0}
 --- !u!1 &1142782083 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5750983549724274034, guid: 97553a6a42d2cdc47bb633f145606950, type: 3}
@@ -9319,8 +9338,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f3b631bdad4af4681e3abcb0e29414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parlamaMateryali: {fileID: 2100000, guid: 6ce5b8d671d43964ea6ea055aa98fc1f, type: 2}
-  grabInteractable: {fileID: 0}
 --- !u!4 &1145835706 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5873509077592119089, guid: 390b49f51e5636c43a238dfcfb60573b, type: 3}
@@ -10870,6 +10887,24 @@ Camera:
   m_CorrespondingSourceObject: {fileID: 1767192439, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
   m_PrefabInstance: {fileID: 441087506}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1401129087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401129074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a2a9c34df4095f47b9ca8f975175f5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Device: 0
+  m_PoseSource: 2
+  m_PoseProviderComponent: {fileID: 0}
+  m_TrackingType: 0
+  m_UpdateType: 0
+  m_UseRelativeTransform: 0
 --- !u!1 &1418389442
 GameObject:
   m_ObjectHideFlags: 0
@@ -11305,8 +11340,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f3b631bdad4af4681e3abcb0e29414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parlamaMateryali: {fileID: 2100000, guid: 6ce5b8d671d43964ea6ea055aa98fc1f, type: 2}
-  grabInteractable: {fileID: 0}
 --- !u!1001 &1438917003
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12239,11 +12272,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbceecb52a4078c4194f6b8169787a35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  probNumarasi: 0
   snappableObject: {fileID: 1064158784}
   isConnected: 0
   snapLocalOffset: {x: 0, y: 0, z: 0}
   snapRange: 0.5
-  debugLog: 1
+  mesajText: {fileID: 0}
+  magnetEffect: 1
+  magnetDuration: 0.15
+  highlightObject: {fileID: 0}
+  emissionHighlight: 1
+  highlightColor: {r: 0, g: 1, b: 0, a: 1}
+  emissionSiddeti: 2
 --- !u!65 &1501161014
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -14229,8 +14269,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f3b631bdad4af4681e3abcb0e29414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parlamaMateryali: {fileID: 2100000, guid: 6ce5b8d671d43964ea6ea055aa98fc1f, type: 2}
-  grabInteractable: {fileID: 0}
 --- !u!1 &1795763416
 GameObject:
   m_ObjectHideFlags: 0
