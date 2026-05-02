@@ -41,6 +41,16 @@ namespace GogoGaga.OptimizedRopesAndCables
         [Tooltip("The Rope width set at start (changing this value during run time will produce no effect)")]
         public float ropeWidth = 0.1f;
 
+        [Header("Collision Settings")]
+        [Tooltip("İpin collider'larla çarpışmasını etkinleştirir")]
+        [SerializeField] private bool enableCollision = true;
+        [Tooltip("Çarpışma kontrolü yapılacak layer'lar")]
+        [SerializeField] private LayerMask collisionLayers = ~0;
+        [Tooltip("İpin yüzey üzerinde tutulacağı mesafe (z-fighting önlemek için)")]
+        [SerializeField] private float collisionOffset = 0.02f;
+        [Tooltip("Nüfuz çözümü için iterasyon sayısı")]
+        [Range(1, 10)][SerializeField] private int collisionIterations = 5;
+
         [Header("Rational Bezier Weight Control")]
         [Tooltip("Adjust the middle control point weight for the Rational Bezier curve")]
         [Range(1, 15)] public float midPointWeight = 1f;
@@ -158,8 +168,8 @@ namespace GogoGaga.OptimizedRopesAndCables
             }
 
             Vector3 mid = GetMidPoint();
-            targetValue = mid;
-            mid = currentValue;
+            targetValue = AdjustMidPointForCollisions(mid);
+            mid = AdjustMidPointForCollisions(currentValue);
 
             if (midPoint != null)
             {
@@ -191,6 +201,50 @@ namespace GogoGaga.OptimizedRopesAndCables
             float yFactor = (ropeLength - Mathf.Min(Vector3.Distance(startPointPosition, endPointPosition), ropeLength)) / CalculateYFactorAdjustment(midPointWeight);
             midpos.y -= yFactor;
             return midpos;
+        }
+
+        private Vector3 AdjustMidPointForCollisions(Vector3 mid)
+        {
+            if (!enableCollision || !Application.isPlaying)
+                return mid;
+
+            Vector3 start = startPoint.position;
+            Vector3 end = endPoint.position;
+
+            for (int iter = 0; iter < collisionIterations; iter++)
+            {
+                float maxHitY = float.NegativeInfinity;
+                bool collisionFound = false;
+
+                Vector3 prevPoint = start;
+                for (int i = 1; i <= linePoints; i++)
+                {
+                    float t = i / (float)linePoints;
+                    Vector3 nextPoint = (i == linePoints)
+                        ? end
+                        : GetRationalBezierPoint(start, mid, end, t, StartPointWeight, midPointWeight, EndPointWeight);
+
+                    if (Physics.Linecast(prevPoint, nextPoint, out RaycastHit hit, collisionLayers, QueryTriggerInteraction.Ignore))
+                    {
+                        collisionFound = true;
+                        if (hit.point.y > maxHitY)
+                            maxHitY = hit.point.y;
+                    }
+
+                    prevPoint = nextPoint;
+                }
+
+                if (!collisionFound)
+                    break;
+
+                float targetY = maxHitY + collisionOffset;
+                if (mid.y < targetY)
+                    mid.y = targetY;
+                else
+                    break;
+            }
+
+            return mid;
         }
 
         private Vector3 GetRationalBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, float t, float w0, float w1, float w2)
