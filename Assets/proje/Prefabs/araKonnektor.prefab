@@ -728,8 +728,18 @@ MonoBehaviour:
     m_Bits: 4294967295
   collisionOffset: 0.02
   collisionIterations: 5
+  endpointDeadzone: 0.15
+  useNormalForCollision: 1
   midPointWeight: 12.08
   midPointPosition: 0.75
+  maxDistance: 10
+  enforceMaxDistance: 1
+  dragTarget: {fileID: 0}
+  enableAutoReturn: 1
+  autoReturnDelay: 2
+  autoReturnSpeed: 1
+  returnedThreshold: 0.15
+  isEndpointAttached: 0
 --- !u!114 &2802014490548703305
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2330,8 +2340,18 @@ MonoBehaviour:
     m_Bits: 4294967295
   collisionOffset: 0.02
   collisionIterations: 5
+  endpointDeadzone: 0.15
+  useNormalForCollision: 1
   midPointWeight: 1
   midPointPosition: 0.25
+  maxDistance: 10
+  enforceMaxDistance: 1
+  dragTarget: {fileID: 0}
+  enableAutoReturn: 1
+  autoReturnDelay: 2
+  autoReturnSpeed: 1
+  returnedThreshold: 0.15
+  isEndpointAttached: 0
 --- !u!114 &864070379863206598
 MonoBehaviour:
   m_ObjectHideFlags: 0
