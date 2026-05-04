@@ -25,10 +25,16 @@ public Vector3 snapLocalRotation = Vector3.zero;
     public float magnetDuration = 0.15f;
 
     [Header("Highlight")]
+    [Tooltip("Ek vurgu mesh’i (halka vb.). Boş bırakılabilir — o zaman sadece soket mesh’i kullanılır.")]
     public GameObject highlightObject;
+    [Tooltip("Soketin kendi mesh’lerini de vurgula (takılacak yeri görmek için genelde açık kalsın).")]
+    public bool highlightIncludeSocketMesh = true;
     public bool emissionHighlight = true;
-    public Color highlightColor = Color.green;
-    [Range(0, 5)] public float emissionSiddeti = 2f;
+    public Color highlightColor = new Color(0.2f, 1f, 0.35f, 1f);
+    [Tooltip("Emission çarpanı — yüksek = daha parlak (Bloom ile çok görünür).")]
+    [Range(0f, 20f)] public float emissionSiddeti = 8f;
+    [Tooltip("Ana renge ne kadar yaklaşsın (0 = hafif, 1 = tam highlight rengi).")]
+    [Range(0f, 1f)] public float baseRenkKarisimi = 0.75f;
 
     private Renderer[] _highlightRenderers;
     private Color[] _originalColors;
@@ -44,19 +50,42 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
     private void Awake()
     {
-        if (emissionHighlight)
-        {
-            _highlightRenderers = GetComponentsInChildren<Renderer>();
-            StoreOriginalColors();
-        }
+        EnsureHighlightRendererCache();
+    }
 
+    private void Start()
+    {
+        // Awake’ten sonra atanmış highlightObject için
+        EnsureHighlightRendererCache();
+    }
+
+    /// <summary>Soket + highlightObject üzerindeki tüm Renderer’ları toplar, orijinal renkleri kaydeder.</summary>
+    private void EnsureHighlightRendererCache()
+    {
+        if (!emissionHighlight) return;
+
+        RebuildHighlightRendererList();
+        if (_highlightRenderers == null || _highlightRenderers.Length == 0) return;
+
+        if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
+            StoreOriginalColors();
+    }
+
+    private void RebuildHighlightRendererList()
+    {
+        var set = new HashSet<Renderer>();
         if (highlightObject != null)
         {
-            if (highlightObject == gameObject)
-                highlightObject = null;
-            else
-                highlightObject.SetActive(false);
+            foreach (var r in highlightObject.GetComponentsInChildren<Renderer>(true))
+                if (r != null) set.Add(r);
         }
+        if (highlightIncludeSocketMesh)
+        {
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+                if (r != null) set.Add(r);
+        }
+
+        _highlightRenderers = set.Count > 0 ? new List<Renderer>(set).ToArray() : null;
     }
 
     private void StoreOriginalColors()
@@ -86,51 +115,42 @@ public Vector3 snapLocalRotation = Vector3.zero;
 {
     if (isConnected) return;
 
-  
-    if (highlightObject != null && highlightObject != gameObject)
-    {
-        highlightObject.SetActive(true);
-        
-     
-        if (_highlightRenderers == null || _highlightRenderers.Length == 0)
-        {
-            _highlightRenderers = highlightObject.GetComponentsInChildren<Renderer>(true);
-        }
-    }
+    EnsureHighlightRendererCache();
 
-
-    if (emissionHighlight && _highlightRenderers != null)
+    if (emissionHighlight && _highlightRenderers != null && _originalColors != null)
     {
-        foreach (var rend in _highlightRenderers)
+        Color emissive = highlightColor * Mathf.Max(0.5f, emissionSiddeti);
+
+        for (int ri = 0; ri < _highlightRenderers.Length; ri++)
         {
-            foreach (var mat in rend.materials) 
+            var rend = _highlightRenderers[ri];
+            Color origBase = ri < _originalColors.Length ? _originalColors[ri] : Color.white;
+
+            foreach (var mat in rend.materials)
             {
-                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", highlightColor);
-                else if (mat.HasProperty("_Color")) mat.SetColor("_Color", highlightColor);
+                if (mat.HasProperty("_BaseColor"))
+                    mat.SetColor("_BaseColor", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
+                else if (mat.HasProperty("_Color"))
+                    mat.SetColor("_Color", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
 
                 if (mat.HasProperty("_EmissionColor"))
                 {
                     mat.EnableKeyword("_EMISSION");
-                    mat.SetColor("_EmissionColor", highlightColor * emissionSiddeti);
+                    mat.SetColor("_EmissionColor", emissive);
                 }
             }
         }
     }
 
-
-
-    AvometreSistemi avo = FindObjectOfType<AvometreSistemi>();
-    if (avo != null && avo.kalibrasyonTamamlandi && GetComponent<PinKimligi>().grupAdi == "KalibrasyonAvo") 
+    AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
+    PinKimligi pinKimligi = GetComponent<PinKimligi>();
+    if (avo != null && avo.kalibrasyonTamamlandi && pinKimligi != null && pinKimligi.grupAdi == "KalibrasyonAvo")
         return;
-
-    if (!isConnected && highlightObject != null) 
-        highlightObject.SetActive(true);
 }
 
     public void HighlightKapat()
     {
-        if (highlightObject != null)
-            highlightObject.SetActive(false);
+        // Hiçbir GameObject SetActive(false) yapılmaz — soket/highlight hiyerarşisi hep açık kalır
 
         if (emissionHighlight && _highlightRenderers != null)
         {
@@ -300,12 +320,9 @@ public Vector3 snapLocalRotation = Vector3.zero;
         HighlightKapat();
 
         if (magnetEffect)
-            StartCoroutine(MagnetRoutine(obj));
+            StartMagnetCoroutine(obj);
         else
-        {
-            obj.position = transform.TransformPoint(snapLocalOffset);
-            obj.rotation = transform.rotation;
-        }
+            SnapInstant(obj);
 
        
 AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
@@ -325,12 +342,31 @@ if (HVManager.Instance != null)
       
     }
 
+    /// <summary>
+    /// Soket GameObject'i kapalıyken this.StartCoroutine patlar; coroutine'i aktif pin objesinde çalıştırırız.
+    /// </summary>
+    private void StartMagnetCoroutine(Transform obj)
+    {
+        MonoBehaviour host = _snappedInteractable != null ? _snappedInteractable : obj.GetComponent<MonoBehaviour>();
+        if (host != null && host.gameObject.activeInHierarchy)
+            host.StartCoroutine(MagnetRoutine(obj));
+        else
+            SnapInstant(obj);
+    }
+
+    private void SnapInstant(Transform obj)
+    {
+        obj.position = transform.TransformPoint(snapLocalOffset);
+        obj.rotation = transform.rotation * Quaternion.Euler(snapLocalRotation);
+    }
+
     private System.Collections.IEnumerator MagnetRoutine(Transform obj)
     {
         _isMagnetizing = true;
 
         Vector3 startPos = obj.position;
         Quaternion startRot = obj.rotation;
+        Quaternion hedefRot = transform.rotation * Quaternion.Euler(snapLocalRotation);
         float t = 0;
 
         while (t < magnetDuration)
@@ -339,13 +375,12 @@ if (HVManager.Instance != null)
             float n = Mathf.SmoothStep(0, 1, t / magnetDuration);
 
             obj.position = Vector3.Lerp(startPos, transform.TransformPoint(snapLocalOffset), n);
-            obj.rotation = Quaternion.Slerp(startRot, transform.rotation, n);
+            obj.rotation = Quaternion.Slerp(startRot, hedefRot, n);
 
             yield return null;
         }
 
-        obj.position = transform.TransformPoint(snapLocalOffset);
-        obj.rotation = transform.rotation;
+        SnapInstant(obj);
 
         _isMagnetizing = false;
     }
