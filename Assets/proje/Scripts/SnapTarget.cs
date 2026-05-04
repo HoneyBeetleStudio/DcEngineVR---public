@@ -10,6 +10,9 @@ public class SnapTarget : MonoBehaviour
     [Header("Avometre Ayarı")]
 public int probNumarasi;
 
+[Header("Snap Ayarları")]
+public Vector3 snapLocalRotation = Vector3.zero; 
+
     public Transform snappableObject;
     public bool isConnected;
     public Vector3 snapLocalOffset = Vector3.zero;
@@ -83,24 +86,24 @@ public int probNumarasi;
 {
     if (isConnected) return;
 
-    // 1. ADIM: Highlight objesini görünür yap
+  
     if (highlightObject != null && highlightObject != gameObject)
     {
         highlightObject.SetActive(true);
         
-        // Eğer renderer listesi boşsa, aktif olduğunda tekrar bulmaya çalış
+     
         if (_highlightRenderers == null || _highlightRenderers.Length == 0)
         {
             _highlightRenderers = highlightObject.GetComponentsInChildren<Renderer>(true);
         }
     }
 
-    // 2. ADIM: Renkleri yak (Emission)
+
     if (emissionHighlight && _highlightRenderers != null)
     {
         foreach (var rend in _highlightRenderers)
         {
-            foreach (var mat in rend.materials) // Birden fazla materyal olabilir
+            foreach (var mat in rend.materials) 
             {
                 if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", highlightColor);
                 else if (mat.HasProperty("_Color")) mat.SetColor("_Color", highlightColor);
@@ -113,6 +116,15 @@ public int probNumarasi;
             }
         }
     }
+
+
+
+    AvometreSistemi avo = FindObjectOfType<AvometreSistemi>();
+    if (avo != null && avo.kalibrasyonTamamlandi && GetComponent<PinKimligi>().grupAdi == "KalibrasyonAvo") 
+        return;
+
+    if (!isConnected && highlightObject != null) 
+        highlightObject.SetActive(true);
 }
 
     public void HighlightKapat()
@@ -146,14 +158,19 @@ public int probNumarasi;
             Ayir(_snappedObject);
             return;
         }
-        Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);     
-        if (!_isMagnetizing)
+       Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);
+        
+        Quaternion beklenenRotasyon = transform.rotation * Quaternion.Euler(snapLocalRotation);
+       if (!_isMagnetizing)
         {
+        
             if (Vector3.Distance(_snappedObject.position, beklenenPozisyon) > 0.001f)
                 _snappedObject.position = beklenenPozisyon;
 
-            if (Quaternion.Angle(_snappedObject.rotation, transform.rotation) > 0.1f)
-                _snappedObject.rotation = transform.rotation;
+         
+            if (Quaternion.Angle(_snappedObject.rotation, beklenenRotasyon) > 0.1f)
+                _snappedObject.rotation = beklenenRotasyon;
+            
            
             float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
             if (distFromSnap > 0.15f)
@@ -299,6 +316,12 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
         avo.BaglantiGuncelle(probNumarasi, pin);
     }
 
+    
+if (HVManager.Instance != null)
+{
+    HVManager.Instance.BaglantiDurumunuGuncelle();
+}
+
       
     }
 
@@ -357,6 +380,15 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     _snappedInteractable = null;
     isConnected = false;
     Debug.Log(gameObject.name + " pini tamamen serbest bıraktı.");
+
+
+
+if (HVManager.Instance != null)
+{
+    HVManager.Instance.BaglantiDurumunuGuncelle();
+}
+
+
 }
 
     private void TutuluncaAyir(SelectEnterEventArgs args)
@@ -369,5 +401,11 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     {
         if (_snappedInteractable != null)
             _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
+    }
+
+
+    public PinKimligi GetSnappedPinKimligi()
+    {
+        return _snappedObject != null ? _snappedObject.GetComponent<PinKimligi>() : null;
     }
 }
