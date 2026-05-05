@@ -33,8 +33,12 @@ public Vector3 snapLocalRotation = Vector3.zero;
     public Color highlightColor = new Color(0.2f, 1f, 0.35f, 1f);
     [Tooltip("Emission çarpanı — yüksek = daha parlak (Bloom ile çok görünür).")]
     [Range(0f, 20f)] public float emissionSiddeti = 8f;
-    [Tooltip("Ana renge ne kadar yaklaşsın (0 = hafif, 1 = tam highlight rengi).")]
+    [Tooltip("Emission HDR kanal tavanı; bloom ile tüm yüzey bembeyaz oluyorsa düşürün (ör. 3–6).")]
+    [Min(0f)] public float maxEmissionChannelValue = 5f;
+    [Tooltip("Ana renge ne kadar yaklaşsın (0 = hafif, 1 = tam highlight rengi). preserveBaseColorDuringHighlight kapalıyken kullanılır.")]
     [Range(0f, 1f)] public float baseRenkKarisimi = 0.75f;
+    [Tooltip("Açıksa HighlightAc ana/base rengi değiştirmez; sadece emission vurgular. Tutunca materyalin kendi rengi korunur.")]
+    public bool preserveBaseColorDuringHighlight = true;
 
     private Renderer[] _highlightRenderers;
     private Color[] _originalColors;
@@ -71,6 +75,9 @@ public Vector3 snapLocalRotation = Vector3.zero;
             StoreOriginalColors();
     }
 
+    /// <summary>Dışarıdan (ör. DevicePlacementSlots) HighlightAc öncesi önbelleği tazelemek için.</summary>
+    public void RefreshHighlightRendererCache() => EnsureHighlightRendererCache();
+
     private void RebuildHighlightRendererList()
     {
         var set = new HashSet<Renderer>();
@@ -88,6 +95,18 @@ public Vector3 snapLocalRotation = Vector3.zero;
         _highlightRenderers = set.Count > 0 ? new List<Renderer>(set).ToArray() : null;
     }
 
+    /// <summary>Sahne örneğindeki gerçek tint için ilk slot materyal örneğini okur (shared değil).</summary>
+    private static Color ReadBaseFromFirstMaterialInstance(Renderer rend, out Material m0)
+    {
+        m0 = null;
+        if (rend == null) return new Color(0.45f, 0.45f, 0.45f, 1f);
+        m0 = rend.material;
+        if (m0 == null) return new Color(0.45f, 0.45f, 0.45f, 1f);
+        if (m0.HasProperty("_BaseColor")) return m0.GetColor("_BaseColor");
+        if (m0.HasProperty("_Color")) return m0.GetColor("_Color");
+        return new Color(0.45f, 0.45f, 0.45f, 1f);
+    }
+
     private void StoreOriginalColors()
     {
         if (_highlightRenderers == null) return;
@@ -98,15 +117,16 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
         for (int i = 0; i < _highlightRenderers.Length; i++)
         {
-            if (_highlightRenderers[i].material.HasProperty("_BaseColor"))
-                _originalColors[i] = _highlightRenderers[i].material.GetColor("_BaseColor");
-            else if (_highlightRenderers[i].material.HasProperty("_Color"))
-                _originalColors[i] = _highlightRenderers[i].material.GetColor("_Color");
+            var rend = _highlightRenderers[i];
+            if (rend == null) continue;
 
-            if (_highlightRenderers[i].material.HasProperty("_EmissionColor"))
+            Material m0 = null;
+            _originalColors[i] = ReadBaseFromFirstMaterialInstance(rend, out m0);
+
+            if (m0 != null && m0.HasProperty("_EmissionColor"))
             {
-                _originalEmissionColors[i] = _highlightRenderers[i].material.GetColor("_EmissionColor");
-                _originalEmissionEnabled[i] = _highlightRenderers[i].material.IsKeywordEnabled("_EMISSION");
+                _originalEmissionColors[i] = m0.GetColor("_EmissionColor");
+                _originalEmissionEnabled[i] = m0.IsKeywordEnabled("_EMISSION");
             }
         }
     }
@@ -117,21 +137,40 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
     EnsureHighlightRendererCache();
 
-    if (emissionHighlight && _highlightRenderers != null && _originalColors != null)
+    if (emissionHighlight && _highlightRenderers != null)
     {
+        if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
+            StoreOriginalColors();
+
+        if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
+            return;
+
         Color emissive = highlightColor * Mathf.Max(0.5f, emissionSiddeti);
+        if (maxEmissionChannelValue > 0f)
+        {
+            emissive.r = Mathf.Min(emissive.r, maxEmissionChannelValue);
+            emissive.g = Mathf.Min(emissive.g, maxEmissionChannelValue);
+            emissive.b = Mathf.Min(emissive.b, maxEmissionChannelValue);
+        }
 
         for (int ri = 0; ri < _highlightRenderers.Length; ri++)
         {
             var rend = _highlightRenderers[ri];
-            Color origBase = ri < _originalColors.Length ? _originalColors[ri] : Color.white;
+            if (rend == null) continue;
+
+            Color origBase = _originalColors[ri];
 
             foreach (var mat in rend.materials)
             {
-                if (mat.HasProperty("_BaseColor"))
-                    mat.SetColor("_BaseColor", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
-                else if (mat.HasProperty("_Color"))
-                    mat.SetColor("_Color", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
+                if (mat == null) continue;
+
+                if (!preserveBaseColorDuringHighlight)
+                {
+                    if (mat.HasProperty("_BaseColor"))
+                        mat.SetColor("_BaseColor", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
+                    else if (mat.HasProperty("_Color"))
+                        mat.SetColor("_Color", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
+                }
 
                 if (mat.HasProperty("_EmissionColor"))
                 {
@@ -152,18 +191,39 @@ public Vector3 snapLocalRotation = Vector3.zero;
     {
         // Hiçbir GameObject SetActive(false) yapılmaz — soket/highlight hiyerarşisi hep açık kalır
 
-        if (emissionHighlight && _highlightRenderers != null)
+        if (!emissionHighlight || _highlightRenderers == null || _highlightRenderers.Length == 0)
+            return;
+
+        if (_originalColors == null || _originalEmissionColors == null || _originalEmissionEnabled == null
+            || _originalColors.Length != _highlightRenderers.Length
+            || _originalEmissionColors.Length != _highlightRenderers.Length
+            || _originalEmissionEnabled.Length != _highlightRenderers.Length)
         {
-            for (int i = 0; i < _highlightRenderers.Length; i++)
+            return;
+        }
+
+        for (int i = 0; i < _highlightRenderers.Length; i++)
+        {
+            var rend = _highlightRenderers[i];
+            if (rend == null) continue;
+
+            Color origBase = _originalColors[i];
+            Color origEmi = _originalEmissionColors[i];
+            bool emiOn = _originalEmissionEnabled[i];
+
+            foreach (var mat in rend.materials)
             {
-                Material mat = _highlightRenderers[i].material;
-                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", _originalColors[i]);
-                else if (mat.HasProperty("_Color")) mat.SetColor("_Color", _originalColors[i]);
+                if (mat == null) continue;
+                if (!preserveBaseColorDuringHighlight)
+                {
+                    if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", origBase);
+                    else if (mat.HasProperty("_Color")) mat.SetColor("_Color", origBase);
+                }
 
                 if (mat.HasProperty("_EmissionColor"))
                 {
-                    mat.SetColor("_EmissionColor", _originalEmissionColors[i]);
-                    if (!_originalEmissionEnabled[i]) mat.DisableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", origEmi);
+                    if (!emiOn) mat.DisableKeyword("_EMISSION");
                 }
             }
         }

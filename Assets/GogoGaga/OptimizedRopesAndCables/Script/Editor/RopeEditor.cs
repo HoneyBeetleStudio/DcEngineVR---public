@@ -10,6 +10,8 @@ namespace GogoGaga.OptimizedRopesAndCables
         private SerializedProperty startPoint;
         private SerializedProperty midPoint;
         private SerializedProperty endPoint;
+        private SerializedProperty ropeMutatesEndTransform;
+        private SerializedProperty driveMidPointTransform;
         private SerializedProperty linePoints;
         private SerializedProperty ropeWidth;
         private SerializedProperty stiffness;
@@ -24,6 +26,8 @@ namespace GogoGaga.OptimizedRopesAndCables
             startPoint = serializedObject.FindProperty("startPoint");
             midPoint = serializedObject.FindProperty("midPoint");
             endPoint = serializedObject.FindProperty("endPoint");
+            ropeMutatesEndTransform = serializedObject.FindProperty("ropeMutatesEndTransform");
+            driveMidPointTransform = serializedObject.FindProperty("driveMidPointTransform");
             linePoints = serializedObject.FindProperty(nameof(Rope.linePoints));
             ropeWidth = serializedObject.FindProperty(nameof(Rope.ropeWidth));
             stiffness = serializedObject.FindProperty(nameof(Rope.stiffness));
@@ -90,6 +94,10 @@ namespace GogoGaga.OptimizedRopesAndCables
             EditorGUILayout.Space(2);
             EditorGUILayout.PropertyField(endPoint, new GUIContent("Rope End"));
             EditorGUILayout.Space(2);
+            if (ropeMutatesEndTransform != null)
+                EditorGUILayout.PropertyField(ropeMutatesEndTransform, new GUIContent("Auto return uç transforma yazar", "Kapalı: uç sadece XR/fizik ile hareket eder"));
+            if (driveMidPointTransform != null)
+                EditorGUILayout.PropertyField(driveMidPointTransform, new GUIContent("Mid transform eğriyi takip etsin", "Kapalı: Mid Point atanmış olsa pozisyonu değişmez"));
 
             CreateTransforms();
 

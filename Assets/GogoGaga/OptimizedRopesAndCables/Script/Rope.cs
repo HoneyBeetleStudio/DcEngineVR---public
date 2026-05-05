@@ -25,15 +25,27 @@ namespace GogoGaga.OptimizedRopesAndCables
         [SerializeField] private Transform endPoint;
         public Transform EndPoint => endPoint;
 
+        [Header("Uç / orta transform (Inspector)")]
+        [Tooltip("false: Auto Return uç transforma pozisyon yazmaz (XR/fizik uçları taşır; ip sadece okur). true: kinematik dönüşte endPoint.position hareket eder")]
+        [SerializeField] private bool ropeMutatesEndTransform = false;
+        [Tooltip("false: midPoint transform pozisyonu güncellenmez (sabit kalır). true: eğrideki kontrol noktasını takip eder (eski paket davranışı)")]
+        [SerializeField] private bool driveMidPointTransform = false;
+
         [Header("Rope Settings")]
         [Tooltip("How many points should the rope have, 2 would be a triangle with straight lines, 100 would be a very flexible rope with many parts")]
         [Range(2, 100)] public int linePoints = 10;
 
         [Tooltip("Value highly dependent on use case, a metal cable would have high stiffness, a rubber rope would have a low one")]
-        public float stiffness = 350f;
+        public float stiffness = 1800f;
 
-        [Tooltip("0 is no damping, 50 is a lot")]
-        public float damping = 15f;
+        [Tooltip("0 is no damping, 50 is a lot. Higher = less wobble, calmer cable")]
+        public float damping = 46f;
+
+        [Tooltip("Orta kontrol noktasının max hızı (0 = sınır yok). Ani sarsıntılarda ipin uçmasını keser")]
+        [Min(0f)] public float maxMidVelocity = 5f;
+
+        [Tooltip("Her fizik adımında orta noktayı hedefe doğrudan yaklaştırır (0 = sadece yay). Yüksek = kablo gibi daha sabit")]
+        [Range(0f, 1f)] public float midHardSnap = 0.28f;
 
         [Tooltip("How long is the rope, it will hang more or less from starting point to end point depending on this value")]
         public float ropeLength = 15;
@@ -74,26 +86,38 @@ namespace GogoGaga.OptimizedRopesAndCables
         public bool enforceMaxDistance = true;
         [Tooltip("Kablo max uzunluğa ulaştığında bu obje sürüklenir (Inspector'dan ata)")]
         public Transform dragTarget;
+        [Tooltip("Max mesafe aşıldığında tek FixedUpdate'te eklenebilecek düzeltme hızı üst sınırı (m/s). Yüksek değer lastik gibi fırlatır")]
+        [Min(0.5f)] public float maxDistanceCorrectionSpeed = 8f;
 
         [Header("Auto Return")]
         [Tooltip("Bırakıldıktan sonra kablo başlangıç konumuna döner")]
         public bool enableAutoReturn = true;
         [Tooltip("Geri dönmeden önce bekleme süresi (saniye)")]
         public float autoReturnDelay = 2.0f;
-        [Tooltip("Geri dönme hızı (SmoothDamp smooth süresi = 1/speed)")]
-        public float autoReturnSpeed = 1.0f;
+        [Tooltip("Geri dönme genel hız çarpanı (kinematik uç için SmoothDamp, rigidbody için hedef hız ölçeği)")]
+        public float autoReturnSpeed = 0.85f;
+        [Tooltip("Rigidbody eve dönerken max lineer hız (m/s)")]
+        [Min(0.05f)] public float autoReturnMaxSpeed = 0.5f;
+        [Tooltip("Rigidbody hızının hedefe yaklaşma katsayısı (düşük = daha yumuşak, örn. 1.5–3)")]
+        [Min(0.25f)] public float autoReturnVelocityBlend = 2.4f;
         [Tooltip("Bu mesafenin altındaysa 'yerine geldi' sayılır")]
         public float returnedThreshold = 0.15f;
         [Tooltip("Dışarıdan true yapılırsa kablo geri dönmez (sokete takılı vb.)")]
         public bool isEndpointAttached = false;
+
+        [Header("Bırakma (tut / bırak)")]
+        [Tooltip("Bırakınca uç rigidbody hızı bu oranla çarpılır (0–1). Küçük = daha az lastik sıçraması")]
+        [Range(0f, 1f)] public float releaseBodyVelocityDamp = 0.38f;
+        [Tooltip("Bırakınca ip eğrisi orta nokta hızı bu oranla sönümlenir")]
+        [Range(0f, 1f)] public float releaseMidCurveDamp = 0.22f;
 
         // --- private state ---
         private Vector3 currentValue;
         private Vector3 currentVelocity;
         private Vector3 targetValue;
         public Vector3 otherPhysicsFactors { get; set; }
-        private const float valueThreshold = 0.01f;
-        private const float velocityThreshold = 0.01f;
+        private const float valueThreshold = 0.035f;
+        private const float velocityThreshold = 0.035f;
 
         private LineRenderer lineRenderer;
         private bool isFirstFrame = true;
@@ -107,6 +131,7 @@ namespace GogoGaga.OptimizedRopesAndCables
         private float prevstiffness;
         private float prevDampness;
         private float prevRopeLength;
+        private float prevMidHardSnap;
 
         private Vector3[] cachedPoints;
 
@@ -199,6 +224,7 @@ namespace GogoGaga.OptimizedRopesAndCables
                 prevstiffness = stiffness;
                 prevDampness = damping;
                 prevRopeLength = ropeLength;
+                prevMidHardSnap = midHardSnap;
             }
         }
 
@@ -226,12 +252,36 @@ namespace GogoGaga.OptimizedRopesAndCables
 
         public void SetEndpointHeld(bool held)
         {
+            bool wasHeld = _isEndpointHeld;
             _isEndpointHeld = held;
             if (held)
             {
                 _isReturning = false;
                 _autoReturnTimer = 0f;
             }
+            else if (wasHeld && Application.isPlaying)
+                ApplyReleaseDamping();
+        }
+
+        private void ApplyReleaseDamping()
+        {
+            if (releaseMidCurveDamp > 0f)
+                currentVelocity *= Mathf.Clamp01(releaseMidCurveDamp);
+
+            float bodyDamp = Mathf.Clamp01(releaseBodyVelocityDamp);
+            if (bodyDamp <= 0f)
+                return;
+
+            void DampRb(Rigidbody rb)
+            {
+                if (rb == null || rb.isKinematic) return;
+                rb.linearVelocity *= bodyDamp;
+                rb.angularVelocity *= bodyDamp;
+            }
+
+            DampRb(_cachedEndRb);
+            if (_cachedDragRb != null && _cachedDragRb != _cachedEndRb)
+                DampRb(_cachedDragRb);
         }
 
         public void SetStartPoint(Transform newStartPoint, bool instantAssign = false)
@@ -304,6 +354,9 @@ namespace GogoGaga.OptimizedRopesAndCables
             // FixedUpdate'te velocity correction: bir fizik adımında gap'i kapatır,
             // ama joint'leri kırmaz çünkü pozisyon değil hız manipüle ediyoruz.
             Vector3 correctionVelocity = dir * (overshoot / Time.fixedDeltaTime);
+            float corrMag = correctionVelocity.magnitude;
+            if (corrMag > maxDistanceCorrectionSpeed && corrMag > 1e-5f)
+                correctionVelocity *= maxDistanceCorrectionSpeed / corrMag;
 
             if (_cachedDragRb != null && !_cachedDragRb.isKinematic)
             {
@@ -362,17 +415,20 @@ namespace GogoGaga.OptimizedRopesAndCables
             if (_cachedEndRb != null && !_cachedEndRb.isKinematic)
             {
                 Vector3 toTarget = returnTarget - _cachedEndRb.position;
+                float dist = toTarget.magnitude;
+                Vector3 dir = dist > 1e-5f ? toTarget / dist : Vector3.zero;
+                float speedScale = Mathf.Max(0.2f, autoReturnSpeed);
+                float proportional = dist * (0.7f * speedScale);
+                float cap = autoReturnMaxSpeed * speedScale;
+                Vector3 desiredVelocity = dir * Mathf.Min(proportional, Mathf.Max(0.08f, cap));
 
-                // Hedef hız = hedefe doğru, autoReturnSpeed ile orantılı
-                Vector3 desiredVelocity = toTarget.normalized * Mathf.Min(toTarget.magnitude * 3f * autoReturnSpeed, 2f * autoReturnSpeed);
-
-                // Mevcut hızı hedefe doğru yumuşakça değiştir
-                _cachedEndRb.linearVelocity = Vector3.Lerp(_cachedEndRb.linearVelocity, desiredVelocity, 6f * Time.fixedDeltaTime);
-                _cachedEndRb.angularVelocity *= 0.92f;
+                float blend = Mathf.Clamp01(autoReturnVelocityBlend * Time.fixedDeltaTime);
+                _cachedEndRb.linearVelocity = Vector3.Lerp(_cachedEndRb.linearVelocity, desiredVelocity, blend);
+                _cachedEndRb.angularVelocity *= Mathf.Lerp(0.94f, 0.99f, blend);
             }
-            else if (endPoint != null)
+            else if (endPoint != null && ropeMutatesEndTransform)
             {
-                float smoothTime = Mathf.Max(0.3f, 1.0f / autoReturnSpeed);
+                float smoothTime = Mathf.Max(0.55f, 1.35f / Mathf.Max(0.25f, autoReturnSpeed));
                 endPoint.position = Vector3.SmoothDamp(
                     endPoint.position, returnTarget,
                     ref _returnSmoothVelocity, smoothTime);
@@ -397,7 +453,7 @@ namespace GogoGaga.OptimizedRopesAndCables
             targetValue = AdjustMidPointForCollisions(mid);
             mid = AdjustMidPointForCollisions(currentValue);
 
-            if (midPoint != null)
+            if (midPoint != null && driveMidPointTransform)
                 midPoint.position = GetRationalBezierPoint(startPoint.position, mid, endPoint.position, midPointPosition, StartPointWeight, midPointWeight, EndPointWeight);
 
             for (int i = 0; i <= linePoints; i++)
@@ -520,13 +576,13 @@ namespace GogoGaga.OptimizedRopesAndCables
                     if (minDistanceToPlane < collisionOffset)
                         mid += worstNormal * (collisionOffset - minDistanceToPlane);
                     else
-                        mid += worstNormal * 0.05f;
+                        mid += worstNormal * 0.02f;
                 }
                 else
                 {
                     float targetY = maxHitY + collisionOffset;
                     if (mid.y < targetY) mid.y = targetY;
-                    else mid.y += 0.05f;
+                    else mid.y += 0.02f;
                 }
             }
 
@@ -545,12 +601,26 @@ namespace GogoGaga.OptimizedRopesAndCables
 
         private void SimulatePhysics()
         {
-            float dampingFactor = Mathf.Max(0, 1 - damping * Time.fixedDeltaTime);
-            Vector3 acceleration = (targetValue - currentValue) * stiffness * Time.fixedDeltaTime;
+            float dt = Time.fixedDeltaTime;
+            float dampingFactor = Mathf.Max(0f, 1f - damping * dt);
+            Vector3 error = targetValue - currentValue;
+            Vector3 acceleration = error * stiffness * dt;
             currentVelocity = currentVelocity * dampingFactor + acceleration + otherPhysicsFactors;
-            currentValue += currentVelocity * Time.fixedDeltaTime;
 
-            if (Vector3.Distance(currentValue, targetValue) < valueThreshold && currentVelocity.magnitude < velocityThreshold)
+            if (maxMidVelocity > 0f && currentVelocity.sqrMagnitude > maxMidVelocity * maxMidVelocity)
+                currentVelocity = currentVelocity.normalized * maxMidVelocity;
+
+            currentValue += currentVelocity * dt;
+
+            if (midHardSnap > 0f)
+            {
+                float t = Mathf.Clamp01(midHardSnap);
+                currentValue = Vector3.Lerp(currentValue, targetValue, t);
+                currentVelocity *= 1f - t * 0.5f;
+            }
+
+            Vector3 residual = targetValue - currentValue;
+            if (residual.sqrMagnitude < valueThreshold * valueThreshold && currentVelocity.sqrMagnitude < velocityThreshold * velocityThreshold)
             {
                 currentValue = targetValue;
                 currentVelocity = Vector3.zero;
@@ -580,7 +650,8 @@ namespace GogoGaga.OptimizedRopesAndCables
                 || !Mathf.Approximately(damping, prevDampness)
                 || !Mathf.Approximately(ropeLength, prevRopeLength)
                 || !Mathf.Approximately(midPointPosition, prevMidPointPosition)
-                || !Mathf.Approximately(midPointWeight, prevMidPointWeight);
+                || !Mathf.Approximately(midPointWeight, prevMidPointWeight)
+                || !Mathf.Approximately(midHardSnap, prevMidHardSnap);
         }
     }
 }

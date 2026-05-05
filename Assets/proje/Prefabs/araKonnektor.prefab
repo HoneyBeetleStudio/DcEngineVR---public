@@ -717,9 +717,13 @@ MonoBehaviour:
   startPoint: {fileID: 2913818367283798973}
   midPoint: {fileID: 0}
   endPoint: {fileID: 8552345192917616680}
+  ropeMutatesEndTransform: 0
+  driveMidPointTransform: 0
   linePoints: 10
   stiffness: 350
   damping: 15
+  maxMidVelocity: 5
+  midHardSnap: 0.28
   ropeLength: 2
   ropeWidth: 0.1
   enableCollision: 1
@@ -735,11 +739,16 @@ MonoBehaviour:
   maxDistance: 10
   enforceMaxDistance: 1
   dragTarget: {fileID: 0}
+  maxDistanceCorrectionSpeed: 8
   enableAutoReturn: 1
   autoReturnDelay: 2
   autoReturnSpeed: 1
+  autoReturnMaxSpeed: 0.5
+  autoReturnVelocityBlend: 2.4
   returnedThreshold: 0.15
   isEndpointAttached: 0
+  releaseBodyVelocityDamp: 0.38
+  releaseMidCurveDamp: 0.22
 --- !u!114 &2802014490548703305
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2329,9 +2338,13 @@ MonoBehaviour:
   startPoint: {fileID: 1635959838866950319}
   midPoint: {fileID: 0}
   endPoint: {fileID: 4385332345157538560}
+  ropeMutatesEndTransform: 0
+  driveMidPointTransform: 0
   linePoints: 10
   stiffness: 15
   damping: 15
+  maxMidVelocity: 5
+  midHardSnap: 0.28
   ropeLength: 2
   ropeWidth: 0.1
   enableCollision: 1
@@ -2347,11 +2360,16 @@ MonoBehaviour:
   maxDistance: 10
   enforceMaxDistance: 1
   dragTarget: {fileID: 0}
+  maxDistanceCorrectionSpeed: 8
   enableAutoReturn: 1
   autoReturnDelay: 2
   autoReturnSpeed: 1
+  autoReturnMaxSpeed: 0.5
+  autoReturnVelocityBlend: 2.4
   returnedThreshold: 0.15
   isEndpointAttached: 0
+  releaseBodyVelocityDamp: 0.38
+  releaseMidCurveDamp: 0.22
 --- !u!114 &864070379863206598
 MonoBehaviour:
   m_ObjectHideFlags: 0
