@@ -67,7 +67,37 @@ public class AraKonnektorSistemi : MonoBehaviour
     }
 
   
+public void BataryayaTakildi() 
+{ 
+  
+    GameObject yuvaObj = GameObject.Find("Batarya_cikis");
+    if (yuvaObj == null) return;
 
-public void BataryayaTakildi() { bataryayaBagli = true; }
-public void BataryadanCikarildi() { bataryayaBagli = false; }
+    SnapTarget bataryaYuvasi = yuvaObj.GetComponent<SnapTarget>();
+    PinKimligi takilanPin = bataryaYuvasi.GetSnappedPinKimligi();
+
+    if (takilanPin != null)
+    {
+  
+        if (takilanPin.grupAdi == "Batarya_Cikis" || takilanPin.gameObject.name.Contains("obje1"))
+        {
+            bataryayaBagli = true; 
+            Debug.Log("<color=green>Onaylandı: Batarya bağlantısı sağlandı (Grup: Batarya_Cikis)</color>");
+        }
+    }
+
+  
+    if(HVManager.Instance != null) HVManager.Instance.BaglantiDurumunuGuncelle();
+}
+
+  public void BataryadanCikarildi() 
+{ 
+    bataryayaBagli = false; 
+    Debug.Log("<color=red>Ara Konnektör Bataryadan AYRILDI!</color>");
+    
+    if(HVManager.Instance != null) 
+    {
+        HVManager.Instance.BaglantiDurumunuGuncelle();
+    }
+}
 }

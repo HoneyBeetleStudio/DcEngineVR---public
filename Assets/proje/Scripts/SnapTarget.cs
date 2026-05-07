@@ -1,11 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class SnapTarget : MonoBehaviour
 {
+
+    [Header("Eventler")]
+    public UnityEvent onObjectSnapped; 
+    public UnityEvent onObjectUnsnapped;
 
     [Header("Avometre Ayarı")]
 public int probNumarasi;
@@ -393,11 +398,11 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
         avo.BaglantiGuncelle(probNumarasi, pin);
     }
 
-    
-if (HVManager.Instance != null)
-{
-    HVManager.Instance.BaglantiDurumunuGuncelle();
-}
+    onObjectSnapped?.Invoke(); 
+
+       
+        if (HVManager.Instance != null) HVManager.Instance.BaglantiDurumunuGuncelle();
+
 
       
     }
@@ -477,7 +482,7 @@ if (HVManager.Instance != null)
     Debug.Log(gameObject.name + " pini tamamen serbest bıraktı.");
 
 
-
+onObjectUnsnapped?.Invoke();
 if (HVManager.Instance != null)
 {
     HVManager.Instance.BaglantiDurumunuGuncelle();

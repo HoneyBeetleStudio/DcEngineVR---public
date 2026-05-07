@@ -5,55 +5,61 @@ public class HVManager : MonoBehaviour
 {
     public static HVManager Instance;
 
-    [Header("Soket Referansları")]
-    public SnapTarget soketArtı;
-    public SnapTarget soketEksi;
+    [Header("Aşama 1: Kalibrasyon Yuvaları")]
+    public SnapTarget calibPlus;  
+    public SnapTarget calibMinus; 
 
-    [Header("Doğrulama Ayarları")]
-    public string beklenenPinIsmi = "HV_Pin"; 
-    public string beklenenSoketGrubu = "HV_Test_Unitesi"; 
+    [Header("Aşama 2: Ara Konnektör Yuvaları")]
+    public SnapTarget testPlus;   
+    public SnapTarget testMinus;  
 
-    [Header("UI")]
+    [Header("Referanslar")]
+    public AraKonnektorSistemi araKonnektor;
     public TextMeshProUGUI durumText;
 
     private void Awake() => Instance = this;
 
     public void BaglantiDurumunuGuncelle()
-    {
-        if (soketArtı == null || soketEksi == null) return;
-        
-        if (soketArtı.isConnected && soketEksi.isConnected)
-        {          
-            bool artıDogru = soketArtı.snappableObject.name.Contains(beklenenPinIsmi);
-            bool eksiDogru = soketEksi.snappableObject.name.Contains(beklenenPinIsmi);
+    {        
+        if (calibPlus != null && calibMinus != null && calibPlus.isConnected && calibMinus.isConnected)
+        {
+            PinKimligi p1 = calibPlus.GetSnappedPinKimligi();
+            PinKimligi p2 = calibMinus.GetSnappedPinKimligi();
            
-            PinKimligi pinArtı = soketArtı.GetComponent<PinKimligi>();
-            PinKimligi pinEksi = soketEksi.GetComponent<PinKimligi>();
-
-            if (artıDogru && eksiDogru && pinArtı.grupAdi == beklenenSoketGrubu && pinEksi.grupAdi == beklenenSoketGrubu)
+            if (p1 != null && p2 != null && p1.grupAdi == "HV_Test_Unitesi" && p2.grupAdi == "HV_Test_Unitesi")
             {
-                CihaziCalistir();
+                durumText.text = "12V";
+                durumText.color = Color.red;
+                return;
+            }
+        }
+
+      
+    if (testPlus != null && testMinus != null && testPlus.isConnected && testMinus.isConnected)
+    {
+       
+        string grupA = testPlus.GetComponent<PinKimligi>().grupAdi;
+        string grupE = testMinus.GetComponent<PinKimligi>().grupAdi;
+
+        if ((grupA == "hv+" && grupE == "hv-") || (grupA == "hv-" && grupE == "hv+"))
+        {           
+            if (araKonnektor != null && araKonnektor.bataryayaBagli)
+            {
+                durumText.text = "12.4V";
+                durumText.color = Color.green;
+                Debug.Log("<color=cyan>EKRAN GÜNCELLENDİ: 12.4V</color>");
             }
             else
-            {
-                CihaziKapat("Hatalı Bağlantı veya Cihaz!");
+            {              
+                durumText.text = "0.0V"; 
+                durumText.color = Color.white;
+                Debug.Log("<color=yellow>HATA: Pinler takılı ama batarya onayı alınamadı!</color>");
             }
-        }
-        else
-        {
-            CihaziKapat("Bağlantı Bekleniyor...");
+            return;
         }
     }
-
-    void CihaziCalistir()
-    {
-        durumText.text = "12V";
-        durumText.color = Color.red;
-    }
-
-    void CihaziKapat(string mesaj)
-    {
-        durumText.text = mesaj;
+    
+    durumText.text = "Bağlantı Bekleniyor...";
         durumText.color = Color.white;
     }
 }

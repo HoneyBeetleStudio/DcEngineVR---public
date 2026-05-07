@@ -4,6 +4,7 @@ using TMPro;
 public class AvometreSistemi : MonoBehaviour
 {
     public TextMeshProUGUI anaEkranText; 
+    private AraKonnektorSistemi _araKonnektor;
 
     private PinKimligi prob1Pin;
     private PinKimligi prob2Pin;
@@ -11,30 +12,52 @@ public class AvometreSistemi : MonoBehaviour
     public bool kalibrasyonTamamlandi = false;
     public int tamamlananTestSayisi = 0;
 
-    public void BaglantiGuncelle(int probNo, PinKimligi pin)
+private void Awake()
     {
+        _araKonnektor = Object.FindAnyObjectByType<AraKonnektorSistemi>();
+    }
+
+
+
+public void BaglantiGuncelle(int probNo, PinKimligi pin)
+{    
+    if (pin.grupAdi == "Batarya_Cikis")
+    {
+        KontrolEt();
+        return;
+    }
+    
+    if (prob1Pin == pin || prob2Pin == pin) return;
+
+    
+    if (prob1Pin == null) prob1Pin = pin;
+    else if (prob2Pin == null) prob2Pin = pin;
+    else
+    {
+    
         if (probNo == 1) prob1Pin = pin;
         else prob2Pin = pin;
-
-       
-        string renk = (probNo == 1) ? "cyan" : "orange"; 
-        Debug.Log($"<color={renk}><b>[PROB {probNo} TAKILDI]</b></color>\n" +
-                  $"<b>Obje Adı:</b> {pin.gameObject.name}\n" +
-                  $"<b>Grup Adı:</b> {pin.grupAdi}");
-
-        KontrolEt();
     }
 
-    public void BaglantiKopart(int probNo)
+    Debug.Log($"<color=cyan><b>[TAKILDI]</b></color> {pin.gameObject.name} | Kanal 1: {(prob1Pin != null ? prob1Pin.name : "Boş")} | Kanal 2: {(prob2Pin != null ? prob2Pin.name : "Boş")}");
+    KontrolEt();
+}
+
+public void BaglantiKopart(int probNo)
+{
+    if (probNo == 1)
     {
-        string kopanObjeAdi = "";
-        if (probNo == 1) { kopanObjeAdi = prob1Pin != null ? prob1Pin.name : "Bilinmiyor"; prob1Pin = null; }
-        else { kopanObjeAdi = prob2Pin != null ? prob2Pin.name : "Bilinmiyor"; prob2Pin = null; }
-
-        Debug.Log($"<color=red><b>[PROB {probNo} AYRILDI]</b></color> -> Ayrılan Obje: {kopanObjeAdi}");
-        
-        KontrolEt();
+        if (prob1Pin != null) Debug.Log($"<color=red><b>[TEMİZLENDİ]</b></color> Kanal 1 boşaltıldı: {prob1Pin.name}");
+        prob1Pin = null;
     }
+    else if (probNo == 2)
+    {
+        if (prob2Pin != null) Debug.Log($"<color=red><b>[TEMİZLENDİ]</b></color> Kanal 2 boşaltıldı: {prob2Pin.name}");
+        prob2Pin = null;
+    }
+
+    KontrolEt();
+}
 
     private void KontrolEt()
     {
@@ -50,50 +73,47 @@ public class AvometreSistemi : MonoBehaviour
             return;
         }
 
-        if (prob1Pin.grupAdi == "KalibrasyonAvo" && prob2Pin.grupAdi == "KalibrasyonAvo")
-        {
-            if (!kalibrasyonTamamlandi)
+// ---  İZOLASYON TESTİ ---       
+        if (_araKonnektor != null && _araKonnektor.bataryayaBagli)
+        {       
+            // Senaryo 1: HV+ ve sasiKontrol
+            if (CheckPinPair("hv+", "sasiKontrol"))
             {
-                KalibrasyonuGerceklestir();
+                anaEkranText.text = "50M ohm"; 
+                 anaEkranText.color = Color.green;
+                 return;
             }
-            else
+            // Senaryo 2: HV- ve sasiKontrol
+            else if (CheckPinPair("hv-", "sasiKontrol"))
             {
-                anaEkranText.text = "0.000";
-                anaEkranText.color = Color.green;
-            }
-        
-            return; 
+                anaEkranText.text = "60M ohm"; 
+            anaEkranText.color = Color.green;
+                return;
+            }          
         }
-
-
-        if (prob1Pin.grupAdi.Contains("Kalibrasyon") || prob2Pin.grupAdi.Contains("Kalibrasyon"))
+       if (CheckPinPair("KalibrasyonAvo", "KalibrasyonAvo"))
     {
-        
-        return; 
+        if (!kalibrasyonTamamlandi) KalibrasyonuGerceklestir();
+        else { anaEkranText.text = "0.000"; anaEkranText.color = Color.green; }
+        return;
+    }
+  
+    if (prob1Pin.grupAdi == prob2Pin.grupAdi)
+    {
+        anaEkranText.text = "EVET"; 
+        anaEkranText.color = Color.green;
+    }
+    else
+    {
+        anaEkranText.text = "HAYIR";
+        anaEkranText.color = Color.red;
+    }
     }
 
-        
-        if (prob1Pin.grupAdi == prob2Pin.grupAdi)
-        {
-            anaEkranText.text = "Doğru";
-            anaEkranText.color = Color.green;        
-            
-         
-            tamamlananTestSayisi++;
-            Debug.Log("<color=green><b>[BAŞARILI]</b></color> Bir çift test edildi. Toplam: " + tamamlananTestSayisi);
-            
-            if(tamamlananTestSayisi >= 3) 
-            {
-                Debug.Log("Tüm testler başarıyla tamamlandı!");
-                anaEkranText.text = "Test Tamamlandı";
-            }
-        }
-        else 
-        {
-           
-            anaEkranText.text = "HAYIR";
-            anaEkranText.color = Color.red;
-        }
+    private bool CheckPinPair(string grupA, string grupB)
+    {
+        return (prob1Pin.grupAdi == grupA && prob2Pin.grupAdi == grupB) ||
+               (prob1Pin.grupAdi == grupB && prob2Pin.grupAdi == grupA);
     }
 
     private void KalibrasyonuGerceklestir()
