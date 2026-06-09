@@ -64,11 +64,9 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
     private void Start()
     {
-        // Awake’ten sonra atanmış highlightObject için
         EnsureHighlightRendererCache();
     }
 
-    /// <summary>Soket + highlightObject üzerindeki tüm Renderer’ları toplar, orijinal renkleri kaydeder.</summary>
     private void EnsureHighlightRendererCache()
     {
         if (!emissionHighlight) return;
@@ -80,7 +78,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
             StoreOriginalColors();
     }
 
-    /// <summary>Dışarıdan (ör. DevicePlacementSlots) HighlightAc öncesi önbelleği tazelemek için.</summary>
     public void RefreshHighlightRendererCache() => EnsureHighlightRendererCache();
 
     private void RebuildHighlightRendererList()
@@ -100,7 +97,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
         _highlightRenderers = set.Count > 0 ? new List<Renderer>(set).ToArray() : null;
     }
 
-    /// <summary>Sahne örneğindeki gerçek tint için ilk slot materyal örneğini okur (shared değil).</summary>
     private static Color ReadBaseFromFirstMaterialInstance(Renderer rend, out Material m0)
     {
         m0 = null;
@@ -194,7 +190,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
     public void HighlightKapat()
     {
-        // Hiçbir GameObject SetActive(false) yapılmaz — soket/highlight hiyerarşisi hep açık kalır
 
         if (!emissionHighlight || _highlightRenderers == null || _highlightRenderers.Length == 0)
             return;
@@ -289,6 +284,16 @@ public Vector3 snapLocalRotation = Vector3.zero;
 
 
     private static List<SnapTarget> _tumSnapTargetlar = new List<SnapTarget>();
+
+    public static bool IsSnapped(Transform obj)
+    {
+        foreach (var target in _tumSnapTargetlar)
+        {
+            if (target != null && target._snappedObject == obj)
+                return true;
+        }
+        return false;
+    }
 
     private void OnEnable()
     {
@@ -407,9 +412,6 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
       
     }
 
-    /// <summary>
-    /// Soket GameObject'i kapalıyken this.StartCoroutine patlar; coroutine'i aktif pin objesinde çalıştırırız.
-    /// </summary>
     private void StartMagnetCoroutine(Transform obj)
     {
         MonoBehaviour host = _snappedInteractable != null ? _snappedInteractable : obj.GetComponent<MonoBehaviour>();

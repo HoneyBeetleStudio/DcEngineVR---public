@@ -142,7 +142,7 @@ public class DevicePlacementSlots : MonoBehaviour
     private bool HighlightVisualIsMovementRoot(PlacementSlot s)
     {
         if (s?.highlightVisual == null || movementRoot == null) return false;
-        return s.highlightVisual.transform == movementRoot;
+        return s.highlightVisual.transform == movementRoot || IsTransformUnder(s.highlightVisual.transform, movementRoot);
     }
 
     private void TryPlacementSnapHighlight(SnapTarget snap)

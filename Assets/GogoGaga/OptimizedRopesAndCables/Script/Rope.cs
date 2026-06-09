@@ -56,6 +56,12 @@ namespace GogoGaga.OptimizedRopesAndCables
         [Header("Collision Settings")]
         [Tooltip("İpin collider'larla çarpışmasını etkinleştirir")]
         [SerializeField] private bool enableCollision = true;
+        [Tooltip("Gerçekçi kablo ağırlığı (Yere Raycast ile yapışma/sarkma)")]
+        [SerializeField] private bool enableGroundRaycast = true;
+        [Tooltip("Kablo yere çarptığında ne kadar sertçe yere yapışacak (0.1 yumuşak, 1.0 anında)")]
+        [Range(0f, 1f)][SerializeField] private float groundSagStrength = 0.5f;
+        [Tooltip("Yere çarpma testi için raycast mesafesi")]
+        [SerializeField] private float groundRaycastLength = 5f;
         [Tooltip("Çarpışma kontrolü yapılacak layer'lar")]
         [SerializeField] private LayerMask collisionLayers = ~0;
         [Tooltip("İpin yüzey üzerinde tutulacağı mesafe")]
@@ -458,6 +464,26 @@ namespace GogoGaga.OptimizedRopesAndCables
 
             for (int i = 0; i <= linePoints; i++)
                 cachedPoints[i] = GetRationalBezierPoint(startPoint.position, mid, endPoint.position, i / (float)linePoints, StartPointWeight, midPointWeight, EndPointWeight);
+
+            if (enableGroundRaycast && Application.isPlaying)
+            {
+                int deadZone = Mathf.RoundToInt(endpointDeadzone * linePoints);
+                for (int i = 1 + deadZone; i < linePoints - deadZone; i++)
+                {
+                    Vector3 p = cachedPoints[i];
+                    // Noktadan aşağı doğru raycast at
+                    if (Physics.Raycast(p + Vector3.up * 0.2f, Vector3.down, out RaycastHit hit, groundRaycastLength + 0.2f, collisionLayers, QueryTriggerInteraction.Ignore))
+                    {
+                        float targetY = hit.point.y + (ropeWidth / 2f) + collisionOffset;
+                        // Nokta hedefe çok yüksekte değilse yere çek (ağırlık hissi)
+                        if (p.y < targetY + 1.5f)
+                        {
+                            p.y = Mathf.Lerp(p.y, targetY, groundSagStrength);
+                        }
+                    }
+                    cachedPoints[i] = p;
+                }
+            }
 
             if (enableCollision && Application.isPlaying)
             {

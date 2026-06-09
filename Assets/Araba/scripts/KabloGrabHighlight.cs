@@ -140,10 +140,6 @@ public class KabloGrabHighlight : MonoBehaviour
             }
         }
 
-        var rb = GetComponent<Rigidbody>();
-        if (rb != null)
-            rb.isKinematic = false;
-
         bool birSoketeBaglandi = false;
         if (snapTargetlar != null)
         {
@@ -156,6 +152,10 @@ public class KabloGrabHighlight : MonoBehaviour
                 }
             }
         }
+
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null && !birSoketeBaglandi)
+            rb.isKinematic = false;
 
         if (yonOku != null && !birSoketeBaglandi)
             yonOku.KabloBirakildi();

@@ -727,6 +727,9 @@ MonoBehaviour:
   ropeLength: 2
   ropeWidth: 0.1
   enableCollision: 1
+  enableGroundRaycast: 1
+  groundSagStrength: 0.5
+  groundRaycastLength: 5
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -2348,6 +2351,9 @@ MonoBehaviour:
   ropeLength: 2
   ropeWidth: 0.1
   enableCollision: 1
+  enableGroundRaycast: 1
+  groundSagStrength: 0.5
+  groundRaycastLength: 5
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295

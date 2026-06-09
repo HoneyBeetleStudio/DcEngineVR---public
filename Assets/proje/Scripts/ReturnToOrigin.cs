@@ -30,7 +30,7 @@ public class ReturnToOrigin : MonoBehaviour
 
     void Update()
     {
-        if (eldeMi)
+        if (eldeMi || SnapTarget.IsSnapped(transform))
         {
             sayac = 0f;
             return;
