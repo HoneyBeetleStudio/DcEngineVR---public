@@ -4,12 +4,6 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-
-/// <summary>
-/// While grabbed, shows optional visuals on placement slots. On release, snaps to the nearest
-/// slot within radius, or smoothly returns to the last valid rest pose if dropped outside all slots.
-/// Optional: accept zone and highlight size can match another object's renderer bounds (e.g. device mesh copy).
-/// </summary>
 [RequireComponent(typeof(XRGrabInteractable))]
 public class DevicePlacementSlots : MonoBehaviour
 {
@@ -42,7 +36,6 @@ public class DevicePlacementSlots : MonoBehaviour
         [Tooltip("Extra padding added to bounds-derived accept radius")]
         [Min(0f)] public float acceptBoundsPadding = 0.02f;
     }
-
     [Header("Movement")]
     [FormerlySerializedAs("hareketKoku")]
     [Tooltip("Root transform that moves when snapping / returning (default: this object)")]
@@ -56,7 +49,6 @@ public class DevicePlacementSlots : MonoBehaviour
     [FormerlySerializedAs("donusSuresi")]
     [Tooltip("Smooth return duration when dropped outside all slots")]
     public float returnDuration = 1.8f;
-
     [Header("Yerleşim toleransı (XR)")]
     [Tooltip("Kabul yarıçapı bu çarpanla genişletilir (bırakınca el hâlâ hafif hareketliyken)")]
     [Min(1f)] public float acceptRadiusSlack = 1.35f;
@@ -64,11 +56,9 @@ public class DevicePlacementSlots : MonoBehaviour
     [Min(0f)] public float postReleaseSettleSeconds = 0.08f;
     [Tooltip("True: hem distanceProbe hem movementRoot konumundan en yakın mesafe kullanılır")]
     public bool checkBothProbeAndRoot = true;
-
     [Header("Slots")]
     [FormerlySerializedAs("yerlesimNoktalari")]
     public PlacementSlot[] placementSlots = System.Array.Empty<PlacementSlot>();
-
     [Header("Highlight fallback (sadece placementSnapTarget yok ve highlightVisual doluysa)")]
     [Tooltip("Tutunca slot vurgusu (MaterialPropertyBlock)")]
     public Color heldHighlightColor = new Color(0.2f, 1f, 0.28f, 1f);
@@ -82,21 +72,15 @@ public class DevicePlacementSlots : MonoBehaviour
     public bool slotHighlightPreserveBaseColor = true;
     [Tooltip("ApplyTintTree emission HDR tavanı; bloom ile cihaz bembeyaz oluyorsa düşürün (ör. 2–4). 0 = tavan yok.")]
     [Min(0f)] public float slotHighlightMaxEmissionChannel = 3.5f;
-
     private static readonly int IdBaseColor = Shader.PropertyToID("_BaseColor");
     private static readonly int IdColor = Shader.PropertyToID("_Color");
     private static readonly int IdEmissionColor = Shader.PropertyToID("_EmissionColor");
-
     private MaterialPropertyBlock _mpb;
-
     private XRGrabInteractable _grab;
     private Coroutine _returnCoroutine;
-
     private List<PoseRecord> _lastValidRest;
-
     private float[] _effectiveAcceptRadius;
     private Vector3[] _acceptSphereCenterLocal;
-
     private Vector3[] _highlightDefaultLocalPos;
     private Quaternion[] _highlightDefaultLocalRot;
     private Vector3[] _highlightDefaultLocalScale;
@@ -104,7 +88,6 @@ public class DevicePlacementSlots : MonoBehaviour
     private Quaternion[] _highlightTargetLocalRot;
     private Vector3[] _highlightTargetLocalScale;
     private bool[] _highlightHasShapeLayout;
-
     private sealed class PoseRecord
     {
         public Transform Transform;
@@ -113,21 +96,17 @@ public class DevicePlacementSlots : MonoBehaviour
         public Vector3 LocalScale;
         public Transform Parent;
     }
-
     private void EnsureLastValidRestList()
     {
         if (_lastValidRest == null)
             _lastValidRest = new List<PoseRecord>();
     }
-
     private static Transform ResolveSlotTransform(PlacementSlot s)
     {
         if (s == null) return null;
         if (s.slot != null) return s.slot;
         return s.placementSnapTarget != null ? s.placementSnapTarget.transform : null;
     }
-
-    /// <summary>Yer vurgusu SnapTarget'ı movementRoot altındaysa highlight uygulanmaz (materyal bozulmasını önler).</summary>
     private static bool IsTransformUnder(Transform t, Transform root)
     {
         if (t == null || root == null) return false;
@@ -137,42 +116,34 @@ public class DevicePlacementSlots : MonoBehaviour
         }
         return false;
     }
-
-    /// <summary>highlightVisual yanlışlıkla tutulan cihaz kökü ise MPB tüm mesh’e yayılır (beyazlama).</summary>
     private bool HighlightVisualIsMovementRoot(PlacementSlot s)
     {
         if (s?.highlightVisual == null || movementRoot == null) return false;
         return s.highlightVisual.transform == movementRoot || IsTransformUnder(s.highlightVisual.transform, movementRoot);
     }
-
     private void TryPlacementSnapHighlight(SnapTarget snap)
     {
         if (snap == null || movementRoot == null) return;
         if (snap.transform == movementRoot || IsTransformUnder(snap.transform, movementRoot))
             return;
-
         snap.RefreshHighlightRendererCache();
         if (!snap.isConnected)
             snap.HighlightAc();
     }
-
     private void Awake()
     {
         EnsureLastValidRestList();
         if (_mpb == null)
             _mpb = new MaterialPropertyBlock();
-
         _grab = GetComponent<XRGrabInteractable>();
         if (movementRoot == null)
             movementRoot = transform;
-
         if (_grab != null)
         {
             _grab.selectEntered.AddListener(OnGrabbed);
             _grab.selectExited.AddListener(OnReleased);
         }
     }
-
     private void OnDestroy()
     {
         if (placementSlots != null)
@@ -185,14 +156,12 @@ public class DevicePlacementSlots : MonoBehaviour
                     ClearTintTree(s.highlightVisual);
             }
         }
-
         if (_grab != null)
         {
             _grab.selectEntered.RemoveListener(OnGrabbed);
             _grab.selectExited.RemoveListener(OnReleased);
         }
     }
-
     private void OnDisable()
     {
         if (_returnCoroutine != null)
@@ -200,7 +169,6 @@ public class DevicePlacementSlots : MonoBehaviour
             StopCoroutine(_returnCoroutine);
             _returnCoroutine = null;
         }
-
         if (placementSlots != null)
         {
             foreach (var s in placementSlots)
@@ -212,32 +180,23 @@ public class DevicePlacementSlots : MonoBehaviour
             }
         }
     }
-
     private void Start()
     {
         EnsureLastValidRestList();
-
         RebuildSlotCaches();
         RecaptureRestPose();
     }
-
-    /// <summary>Call after scene setup or teleport so the current pose becomes the valid rest pose.</summary>
     public void RecaptureRestPose()
     {
         EnsureLastValidRestList();
         CaptureChain(_lastValidRest);
     }
-
-    /// <summary>Turkish alias for older calls — use <see cref="RecaptureRestPose"/>.</summary>
     public void SonGecerliPozuYenidenYakala() => RecaptureRestPose();
-
-    /// <summary>Recompute bounds-based accept radii and highlight layout (e.g. after changing references in editor at runtime).</summary>
     public void RebuildSlotCaches()
     {
         int n = placementSlots != null ? placementSlots.Length : 0;
         _effectiveAcceptRadius = new float[n];
         _acceptSphereCenterLocal = new Vector3[n];
-
         _highlightDefaultLocalPos = new Vector3[n];
         _highlightDefaultLocalRot = new Quaternion[n];
         _highlightDefaultLocalScale = new Vector3[n];
@@ -245,14 +204,12 @@ public class DevicePlacementSlots : MonoBehaviour
         _highlightTargetLocalRot = new Quaternion[n];
         _highlightTargetLocalScale = new Vector3[n];
         _highlightHasShapeLayout = new bool[n];
-
         for (int i = 0; i < n; i++)
         {
             var s = placementSlots[i];
             Transform slotTf = ResolveSlotTransform(s);
             if (slotTf == null)
                 continue;
-
             if (s.acceptZoneMatchBoundsOf != null)
             {
                 Bounds b = GetCombinedRendererBounds(s.acceptZoneMatchBoundsOf);
@@ -265,7 +222,6 @@ public class DevicePlacementSlots : MonoBehaviour
                 _effectiveAcceptRadius[i] = s.acceptRadius;
                 _acceptSphereCenterLocal[i] = s.slotLocalOffset;
             }
-
             if (s.placementSnapTarget == null && s.highlightVisual != null)
             {
                 Transform h = s.highlightVisual.transform;
@@ -273,7 +229,6 @@ public class DevicePlacementSlots : MonoBehaviour
                 _highlightDefaultLocalRot[i] = h.localRotation;
                 _highlightDefaultLocalScale[i] = h.localScale;
                 _highlightHasShapeLayout[i] = false;
-
                 if (s.highlightBoundsShapeReference != null)
                 {
                     Bounds hb = GetCombinedRendererBounds(s.highlightBoundsShapeReference);
@@ -281,7 +236,6 @@ public class DevicePlacementSlots : MonoBehaviour
                     Quaternion localRot = Quaternion.Inverse(slotTf.rotation) * s.highlightBoundsShapeReference.rotation;
                     Vector3 worldSize = hb.size;
                     Vector3 localScale = WorldSizeToLocalScaleLossyApprox(slotTf, worldSize);
-
                     _highlightTargetLocalPos[i] = localPos;
                     _highlightTargetLocalRot[i] = localRot;
                     _highlightTargetLocalScale[i] = localScale;
@@ -290,27 +244,21 @@ public class DevicePlacementSlots : MonoBehaviour
             }
         }
     }
-
     private static Bounds GetCombinedRendererBounds(Transform root)
     {
         if (root == null)
             return new Bounds(Vector3.zero, Vector3.one * 0.1f);
-
         var rends = root.GetComponentsInChildren<Renderer>(true);
         if (rends == null || rends.Length == 0)
             return new Bounds(root.position, Vector3.one * 0.1f);
-
         Bounds b = rends[0].bounds;
         for (int i = 1; i < rends.Length; i++)
         {
             if (rends[i] != null)
                 b.Encapsulate(rends[i].bounds);
         }
-
         return b;
     }
-
-    /// <summary>Approximate local scale so lossy scale matches worldSize when parent is slot.</summary>
     private static Vector3 WorldSizeToLocalScaleLossyApprox(Transform slot, Vector3 worldSize)
     {
         Vector3 ps = slot.lossyScale;
@@ -319,9 +267,7 @@ public class DevicePlacementSlots : MonoBehaviour
             SafeDiv(worldSize.y, Mathf.Max(1e-4f, ps.y)),
             SafeDiv(worldSize.z, Mathf.Max(1e-4f, ps.z)));
     }
-
     private static float SafeDiv(float a, float b) => a / Mathf.Max(1e-4f, b);
-
     private static void ClearTintTree(GameObject root)
     {
         if (root == null) return;
@@ -331,14 +277,11 @@ public class DevicePlacementSlots : MonoBehaviour
                 r.SetPropertyBlock(null);
         }
     }
-
     private void ApplyTintTree(GameObject root, Color baseColor, float emissionMul)
     {
         if (root == null) return;
-
         if (_mpb == null)
             _mpb = new MaterialPropertyBlock();
-
         Color emission = baseColor * emissionMul;
         if (slotHighlightMaxEmissionChannel > 0f)
         {
@@ -346,11 +289,9 @@ public class DevicePlacementSlots : MonoBehaviour
             emission.g = Mathf.Min(emission.g, slotHighlightMaxEmissionChannel);
             emission.b = Mathf.Min(emission.b, slotHighlightMaxEmissionChannel);
         }
-
         foreach (var r in root.GetComponentsInChildren<Renderer>(true))
         {
             if (r == null) continue;
-
             _mpb.Clear();
             var mats = r.sharedMaterials;
             bool wroteBase = false;
@@ -372,32 +313,24 @@ public class DevicePlacementSlots : MonoBehaviour
                         wroteBase = true;
                     }
                 }
-
                 if (m.HasProperty(IdEmissionColor))
                     hasEmission = true;
             }
-
             if (hasEmission)
                 _mpb.SetColor(IdEmissionColor, emission);
-
             r.SetPropertyBlock(_mpb);
         }
     }
-
     private void CaptureChain(List<PoseRecord> list)
     {
         if (list == null)
             return;
-
         list.Clear();
-
         if (!transform)
             return;
-
         Transform start = movementRoot != null ? movementRoot : transform;
         if (!start)
             return;
-
         Transform t = start;
         for (int d = 0; d <= parentChainDepth && t; d++)
         {
@@ -412,7 +345,6 @@ public class DevicePlacementSlots : MonoBehaviour
             t = t.parent;
         }
     }
-
     private void OnGrabbed(SelectEnterEventArgs _)
     {
         if (_returnCoroutine != null)
@@ -420,25 +352,20 @@ public class DevicePlacementSlots : MonoBehaviour
             StopCoroutine(_returnCoroutine);
             _returnCoroutine = null;
         }
-
         if (placementSlots == null || placementSlots.Length == 0)
             return;
-
         for (int i = 0; i < placementSlots.Length; i++)
         {
             var s = placementSlots[i];
             if (s == null)
                 continue;
-
             if (s.placementSnapTarget != null)
             {
                 TryPlacementSnapHighlight(s.placementSnapTarget);
                 continue;
             }
-
             if (s.highlightVisual == null)
                 continue;
-
             if (HighlightVisualIsMovementRoot(s))
             {
                 Debug.LogWarning(
@@ -448,7 +375,6 @@ public class DevicePlacementSlots : MonoBehaviour
                     this);
                 continue;
             }
-
             if (_highlightHasShapeLayout != null && i < _highlightHasShapeLayout.Length && _highlightHasShapeLayout[i])
             {
                 Transform h = s.highlightVisual.transform;
@@ -456,12 +382,10 @@ public class DevicePlacementSlots : MonoBehaviour
                 h.localRotation = _highlightTargetLocalRot[i];
                 h.localScale = _highlightTargetLocalScale[i];
             }
-
             s.highlightVisual.SetActive(true);
             ApplyTintTree(s.highlightVisual, heldHighlightColor, heldEmissionMultiplier);
         }
     }
-
     private void OnReleased(SelectExitEventArgs _)
     {
         if (placementSlots != null)
@@ -471,19 +395,15 @@ public class DevicePlacementSlots : MonoBehaviour
                 var s = placementSlots[i];
                 if (s == null)
                     continue;
-
                 if (s.placementSnapTarget != null)
                 {
                     s.placementSnapTarget.HighlightKapat();
                     continue;
                 }
-
                 if (s.highlightVisual == null)
                     continue;
-
                 if (!HighlightVisualIsMovementRoot(s))
                     ApplyTintTree(s.highlightVisual, releasedHighlightColor, releasedEmissionMultiplier);
-
                 if (_highlightHasShapeLayout != null && i < _highlightHasShapeLayout.Length && _highlightHasShapeLayout[i])
                 {
                     Transform h = s.highlightVisual.transform;
@@ -491,62 +411,48 @@ public class DevicePlacementSlots : MonoBehaviour
                     h.localRotation = _highlightDefaultLocalRot[i];
                     h.localScale = _highlightDefaultLocalScale[i];
                 }
-
                 s.highlightVisual.SetActive(false);
                 ClearTintTree(s.highlightVisual);
             }
         }
-
         if (placementSlots == null || placementSlots.Length == 0)
             return;
-
         _returnCoroutine = StartCoroutine(EvaluateAfterRelease());
     }
-
     private float GetEffectiveAcceptRadius(int index, PlacementSlot s)
     {
         if (_effectiveAcceptRadius != null && index >= 0 && index < _effectiveAcceptRadius.Length)
             return _effectiveAcceptRadius[index];
         return s.acceptRadius;
     }
-
     private Vector3 GetAcceptSphereCenterWorld(int index, PlacementSlot s)
     {
         Transform slotTf = ResolveSlotTransform(s);
         if (slotTf == null)
             return Vector3.zero;
-
         if (_acceptSphereCenterLocal != null && index >= 0 && index < _acceptSphereCenterLocal.Length)
             return slotTf.TransformPoint(_acceptSphereCenterLocal[index]);
-
         return slotTf.TransformPoint(s.slotLocalOffset);
     }
-
     private IEnumerator EvaluateAfterRelease()
     {
         yield return null;
         yield return new WaitForFixedUpdate();
         yield return new WaitForFixedUpdate();
-
         if (postReleaseSettleSeconds > 0f)
             yield return new WaitForSeconds(postReleaseSettleSeconds);
-
         EnsureLastValidRestList();
-
         Transform root = movementRoot != null ? movementRoot : transform;
         Transform probe = distanceProbe != null ? distanceProbe : root;
         Vector3 probePos = probe.position;
         Vector3 rootPos = root.position;
-
         PlacementSlot best = null;
         float bestDist = float.MaxValue;
-
         for (int i = 0; i < placementSlots.Length; i++)
         {
             var s = placementSlots[i];
             if (ResolveSlotTransform(s) == null)
                 continue;
-
             Vector3 center = GetAcceptSphereCenterWorld(i, s);
             float r = GetEffectiveAcceptRadius(i, s) * acceptRadiusSlack;
             float d = checkBothProbeAndRoot
@@ -558,13 +464,11 @@ public class DevicePlacementSlots : MonoBehaviour
                 best = s;
             }
         }
-
         Rigidbody rb = null;
         if (root != null)
             rb = root.GetComponent<Rigidbody>() ?? root.GetComponentInParent<Rigidbody>();
         if (rb == null)
             rb = GetComponent<Rigidbody>();
-
         if (best != null)
         {
             SnapToSlot(best, root);
@@ -577,44 +481,34 @@ public class DevicePlacementSlots : MonoBehaviour
             _returnCoroutine = null;
             yield break;
         }
-
         if (_lastValidRest.Count == 0)
         {
             _returnCoroutine = null;
             yield break;
         }
-
         yield return ReturnToRestPose(rb);
     }
-
     private void SnapToSlot(PlacementSlot n, Transform root)
     {
         Transform s = ResolveSlotTransform(n);
         if (s == null || root == null) return;
-
         Quaternion targetRot = n.alignRotation
             ? s.rotation * Quaternion.Euler(n.eulerOffset)
             : root.rotation;
-
         Vector3 targetPos = s.TransformPoint(n.slotLocalOffset);
-
         if (!n.alignRotation)
             targetPos = root.position;
-
         root.SetPositionAndRotation(targetPos, targetRot);
     }
-
     private IEnumerator ReturnToRestPose(Rigidbody rb)
     {
         EnsureLastValidRestList();
-
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
         }
-
         var lerpFrom = new List<(Vector3 lp, Quaternion lq, Vector3 ls)>(_lastValidRest.Count);
         foreach (var r in _lastValidRest)
         {
@@ -623,29 +517,24 @@ public class DevicePlacementSlots : MonoBehaviour
                 lerpFrom.Add((Vector3.zero, Quaternion.identity, Vector3.one));
                 continue;
             }
-
             lerpFrom.Add((r.Transform.localPosition, r.Transform.localRotation, r.Transform.localScale));
         }
-
         float elapsed = 0f;
         while (elapsed < returnDuration)
         {
             elapsed += Time.deltaTime;
             float a = Mathf.Clamp01(elapsed / returnDuration);
             a = a * a * (3f - 2f * a);
-
             for (int i = 0; i < _lastValidRest.Count; i++)
             {
                 var rec = _lastValidRest[i];
                 if (rec.Transform == null || rec.Transform.parent != rec.Parent)
                     continue;
-
                 var fr = lerpFrom[i];
                 rec.Transform.localPosition = Vector3.Lerp(fr.lp, rec.LocalPosition, a);
                 rec.Transform.localRotation = Quaternion.Slerp(fr.lq, rec.LocalRotation, a);
                 rec.Transform.localScale = Vector3.Lerp(fr.ls, rec.LocalScale, a);
             }
-
             if (_grab != null && _grab.isSelected)
             {
                 if (rb != null)
@@ -657,10 +546,8 @@ public class DevicePlacementSlots : MonoBehaviour
                 _returnCoroutine = null;
                 yield break;
             }
-
             yield return null;
         }
-
         for (int i = 0; i < _lastValidRest.Count; i++)
         {
             var rec = _lastValidRest[i];
@@ -670,14 +557,12 @@ public class DevicePlacementSlots : MonoBehaviour
             rec.Transform.localRotation = rec.LocalRotation;
             rec.Transform.localScale = rec.LocalScale;
         }
-
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = false;
         }
-
         _returnCoroutine = null;
     }
 }

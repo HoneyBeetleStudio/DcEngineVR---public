@@ -204,7 +204,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 755597624}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: LoadElectricCarScene
+        m_MethodName: loadElectricCarScene
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -752,7 +752,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 755597624}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: QuitApplication
+        m_MethodName: quitApplication
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1100,7 +1100,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 755597624}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: LoadDCEngineScene
+        m_MethodName: loadDcEngineScene
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

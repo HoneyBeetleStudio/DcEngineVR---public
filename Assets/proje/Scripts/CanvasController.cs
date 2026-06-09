@@ -2,20 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using TMPro;
-
 public class CanvasController : MonoBehaviour
 {
     [SerializeField] string[] basliklar;
     [SerializeField] string[] aciklamalar;
     [SerializeField] VideoPlayer[] videoPlayers;
     [SerializeField] AudioSource audioSource;
-
     [SerializeField] TextMeshProUGUI baslikArea;
     [SerializeField] TextMeshProUGUI aciklamaArea;
     [SerializeField] VideoClip[] videolar;
     [SerializeField] AudioClip[] sesler;
     [SerializeField] Button[] butonlar;
-
     void Start()
     {
         baslikArea.text = basliklar[0];
@@ -36,5 +33,4 @@ public class CanvasController : MonoBehaviour
         audioSource.clip = sesler[index];
         audioSource.Play();
     }
-
 }

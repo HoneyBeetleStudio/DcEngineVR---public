@@ -4,31 +4,24 @@ using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
-
 public class SnapTarget : MonoBehaviour
 {
-
     [Header("Eventler")]
     public UnityEvent onObjectSnapped; 
     public UnityEvent onObjectUnsnapped;
-
     [Header("Avometre Ayarı")]
 public int probNumarasi;
-
 [Header("Snap Ayarları")]
 public Vector3 snapLocalRotation = Vector3.zero; 
-
     public Transform snappableObject;
     public bool isConnected;
     public Vector3 snapLocalOffset = Vector3.zero;
     public float snapRange = 0.3f;
     [Header("UI Mesaj Ayarı")]
     public TMPro.TextMeshProUGUI mesajText;
-
     [Header("Magnet")]
     public bool magnetEffect = true;
     public float magnetDuration = 0.15f;
-
     [Header("Highlight")]
     [Tooltip("Ek vurgu mesh’i (halka vb.). Boş bırakılabilir — o zaman sadece soket mesh’i kullanılır.")]
     public GameObject highlightObject;
@@ -44,42 +37,32 @@ public Vector3 snapLocalRotation = Vector3.zero;
     [Range(0f, 1f)] public float baseRenkKarisimi = 0.75f;
     [Tooltip("Açıksa HighlightAc ana/base rengi değiştirmez; sadece emission vurgular. Tutunca materyalin kendi rengi korunur.")]
     public bool preserveBaseColorDuringHighlight = true;
-
     private Renderer[] _highlightRenderers;
     private Color[] _originalColors;
     private Color[] _originalEmissionColors;
     private bool[] _originalEmissionEnabled;
-
     private Transform _snappedObject;
     private XRGrabInteractable _snappedInteractable;
     private bool _isMagnetizing = false;
-
     private static KabloGrabHighlight[] _cachedKablolar;
     private static float _cacheZamani;
-
     private void Awake()
     {
         EnsureHighlightRendererCache();
     }
-
     private void Start()
     {
         EnsureHighlightRendererCache();
     }
-
     private void EnsureHighlightRendererCache()
     {
         if (!emissionHighlight) return;
-
         RebuildHighlightRendererList();
         if (_highlightRenderers == null || _highlightRenderers.Length == 0) return;
-
         if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
             StoreOriginalColors();
     }
-
     public void RefreshHighlightRendererCache() => EnsureHighlightRendererCache();
-
     private void RebuildHighlightRendererList()
     {
         var set = new HashSet<Renderer>();
@@ -93,10 +76,8 @@ public Vector3 snapLocalRotation = Vector3.zero;
             foreach (var r in GetComponentsInChildren<Renderer>(true))
                 if (r != null) set.Add(r);
         }
-
         _highlightRenderers = set.Count > 0 ? new List<Renderer>(set).ToArray() : null;
     }
-
     private static Color ReadBaseFromFirstMaterialInstance(Renderer rend, out Material m0)
     {
         m0 = null;
@@ -107,23 +88,18 @@ public Vector3 snapLocalRotation = Vector3.zero;
         if (m0.HasProperty("_Color")) return m0.GetColor("_Color");
         return new Color(0.45f, 0.45f, 0.45f, 1f);
     }
-
     private void StoreOriginalColors()
     {
         if (_highlightRenderers == null) return;
-
         _originalColors = new Color[_highlightRenderers.Length];
         _originalEmissionColors = new Color[_highlightRenderers.Length];
         _originalEmissionEnabled = new bool[_highlightRenderers.Length];
-
         for (int i = 0; i < _highlightRenderers.Length; i++)
         {
             var rend = _highlightRenderers[i];
             if (rend == null) continue;
-
             Material m0 = null;
             _originalColors[i] = ReadBaseFromFirstMaterialInstance(rend, out m0);
-
             if (m0 != null && m0.HasProperty("_EmissionColor"))
             {
                 _originalEmissionColors[i] = m0.GetColor("_EmissionColor");
@@ -131,21 +107,16 @@ public Vector3 snapLocalRotation = Vector3.zero;
             }
         }
     }
-
    public void HighlightAc()
 {
     if (isConnected) return;
-
     EnsureHighlightRendererCache();
-
     if (emissionHighlight && _highlightRenderers != null)
     {
         if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
             StoreOriginalColors();
-
         if (_originalColors == null || _originalColors.Length != _highlightRenderers.Length)
             return;
-
         Color emissive = highlightColor * Mathf.Max(0.5f, emissionSiddeti);
         if (maxEmissionChannelValue > 0f)
         {
@@ -153,18 +124,14 @@ public Vector3 snapLocalRotation = Vector3.zero;
             emissive.g = Mathf.Min(emissive.g, maxEmissionChannelValue);
             emissive.b = Mathf.Min(emissive.b, maxEmissionChannelValue);
         }
-
         for (int ri = 0; ri < _highlightRenderers.Length; ri++)
         {
             var rend = _highlightRenderers[ri];
             if (rend == null) continue;
-
             Color origBase = _originalColors[ri];
-
             foreach (var mat in rend.materials)
             {
                 if (mat == null) continue;
-
                 if (!preserveBaseColorDuringHighlight)
                 {
                     if (mat.HasProperty("_BaseColor"))
@@ -172,7 +139,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
                     else if (mat.HasProperty("_Color"))
                         mat.SetColor("_Color", Color.Lerp(origBase, highlightColor, baseRenkKarisimi));
                 }
-
                 if (mat.HasProperty("_EmissionColor"))
                 {
                     mat.EnableKeyword("_EMISSION");
@@ -181,19 +147,15 @@ public Vector3 snapLocalRotation = Vector3.zero;
             }
         }
     }
-
     AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     PinKimligi pinKimligi = GetComponent<PinKimligi>();
     if (avo != null && avo.kalibrasyonTamamlandi && pinKimligi != null && pinKimligi.grupAdi == "KalibrasyonAvo")
         return;
 }
-
     public void HighlightKapat()
     {
-
         if (!emissionHighlight || _highlightRenderers == null || _highlightRenderers.Length == 0)
             return;
-
         if (_originalColors == null || _originalEmissionColors == null || _originalEmissionEnabled == null
             || _originalColors.Length != _highlightRenderers.Length
             || _originalEmissionColors.Length != _highlightRenderers.Length
@@ -201,16 +163,13 @@ public Vector3 snapLocalRotation = Vector3.zero;
         {
             return;
         }
-
         for (int i = 0; i < _highlightRenderers.Length; i++)
         {
             var rend = _highlightRenderers[i];
             if (rend == null) continue;
-
             Color origBase = _originalColors[i];
             Color origEmi = _originalEmissionColors[i];
             bool emiOn = _originalEmissionEnabled[i];
-
             foreach (var mat in rend.materials)
             {
                 if (mat == null) continue;
@@ -219,7 +178,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
                     if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", origBase);
                     else if (mat.HasProperty("_Color")) mat.SetColor("_Color", origBase);
                 }
-
                 if (mat.HasProperty("_EmissionColor"))
                 {
                     mat.SetColor("_EmissionColor", origEmi);
@@ -228,7 +186,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
             }
         }
     }
-
    private void Update()
 {   
     if (_snappedObject != null)
@@ -239,26 +196,19 @@ public Vector3 snapLocalRotation = Vector3.zero;
             return;
         }
        Vector3 beklenenPozisyon = transform.TransformPoint(snapLocalOffset);
-        
         Quaternion beklenenRotasyon = transform.rotation * Quaternion.Euler(snapLocalRotation);
        if (!_isMagnetizing)
         {
-        
             if (Vector3.Distance(_snappedObject.position, beklenenPozisyon) > 0.001f)
                 _snappedObject.position = beklenenPozisyon;
-
-         
             if (Quaternion.Angle(_snappedObject.rotation, beklenenRotasyon) > 0.1f)
                 _snappedObject.rotation = beklenenRotasyon;
-            
-           
             float distFromSnap = Vector3.Distance(_snappedObject.position, beklenenPozisyon);
             if (distFromSnap > 0.15f)
                 Ayir(_snappedObject);
         }
         return;
     }
-
     if (snappableObject != null)
     {
         TrySnapObject(snappableObject);
@@ -270,7 +220,6 @@ public Vector3 snapLocalRotation = Vector3.zero;
             _cachedKablolar = FindObjectsByType<KabloGrabHighlight>(FindObjectsSortMode.None);
             _cacheZamani = Time.time;
         }
-
         if (_cachedKablolar != null)
         {
             foreach (var kablo in _cachedKablolar)
@@ -281,10 +230,7 @@ public Vector3 snapLocalRotation = Vector3.zero;
         }
     }
 }
-
-
     private static List<SnapTarget> _tumSnapTargetlar = new List<SnapTarget>();
-
     public static bool IsSnapped(Transform obj)
     {
         foreach (var target in _tumSnapTargetlar)
@@ -294,19 +240,16 @@ public Vector3 snapLocalRotation = Vector3.zero;
         }
         return false;
     }
-
     private void OnEnable()
     {
         if (!_tumSnapTargetlar.Contains(this))
             _tumSnapTargetlar.Add(this);
     }
-
     private void OnDisable()
     {
         if (_tumSnapTargetlar.Contains(this))
             _tumSnapTargetlar.Remove(this);
     }
-
     private bool BaskaBirTargetaBagliMi(Transform obj)
     {
         foreach (var target in _tumSnapTargetlar)
@@ -316,20 +259,15 @@ public Vector3 snapLocalRotation = Vector3.zero;
         }
         return false;
     }
-
     private bool TrySnapObject(Transform target)
     {
         var grab = target.GetComponent<XRGrabInteractable>();
         Rigidbody rb = target.GetComponent<Rigidbody>();
-
         if (grab == null || rb == null) return false;
-        
         if (BaskaBirTargetaBagliMi(target)) 
         {       
             return false; 
         }
-
-        
         if (!grab.isSelected)
         {
             float dist = Vector3.Distance(target.position, transform.position);
@@ -341,12 +279,10 @@ public Vector3 snapLocalRotation = Vector3.zero;
     }
     return false;
 }
-
     private void SnapYap(Transform obj)
     {
         if (_snappedObject != null) return;
         if (obj.parent != null && obj.parent.GetComponent<SnapTarget>() != null) return;
-
         var rb = obj.GetComponent<Rigidbody>();
         if (rb != null)
         {
@@ -354,12 +290,9 @@ public Vector3 snapLocalRotation = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
         }
-
         _snappedObject = obj;
         _snappedInteractable = obj.GetComponent<XRGrabInteractable>();
         isConnected = true;
-
-        
     if (obj.name.ToLower().Contains("fis1") && mesajText != null)
     {      
         mesajText.gameObject.SetActive(true);      
@@ -368,11 +301,9 @@ public Vector3 snapLocalRotation = Vector3.zero;
             mesajText.text = "Gerilim Var";           
         }
     }
-
         if (_snappedInteractable != null)
         {
             _snappedInteractable.selectEntered.AddListener(TutuluncaAyir);
-
             if (_snappedInteractable.isSelected)
             {
                 var interactor = _snappedInteractable.firstInteractorSelecting;
@@ -383,35 +314,23 @@ public Vector3 snapLocalRotation = Vector3.zero;
                         mgr.SelectCancel((IXRSelectInteractor)interactor, (IXRSelectInteractable)_snappedInteractable);
                 }
             }
-
             _snappedInteractable.trackPosition = false;
             _snappedInteractable.trackRotation = false;
         }
         HighlightKapat();
-
         if (magnetEffect)
             StartMagnetCoroutine(obj);
         else
             SnapInstant(obj);
-
-       
 AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     PinKimligi pin = GetComponent<PinKimligi>();
-
     if (avo != null && pin != null)
     {        
         avo.BaglantiGuncelle(probNumarasi, pin);
     }
-
     onObjectSnapped?.Invoke(); 
-
-       
         if (HVManager.Instance != null) HVManager.Instance.BaglantiDurumunuGuncelle();
-
-
-      
     }
-
     private void StartMagnetCoroutine(Transform obj)
     {
         MonoBehaviour host = _snappedInteractable != null ? _snappedInteractable : obj.GetComponent<MonoBehaviour>();
@@ -420,92 +339,70 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
         else
             SnapInstant(obj);
     }
-
     private void SnapInstant(Transform obj)
     {
         obj.position = transform.TransformPoint(snapLocalOffset);
         obj.rotation = transform.rotation * Quaternion.Euler(snapLocalRotation);
     }
-
     private System.Collections.IEnumerator MagnetRoutine(Transform obj)
     {
         _isMagnetizing = true;
-
         Vector3 startPos = obj.position;
         Quaternion startRot = obj.rotation;
         Quaternion hedefRot = transform.rotation * Quaternion.Euler(snapLocalRotation);
         float t = 0;
-
         while (t < magnetDuration)
         {
             t += Time.deltaTime;
             float n = Mathf.SmoothStep(0, 1, t / magnetDuration);
-
             obj.position = Vector3.Lerp(startPos, transform.TransformPoint(snapLocalOffset), n);
             obj.rotation = Quaternion.Slerp(startRot, hedefRot, n);
-
             yield return null;
         }
-
         SnapInstant(obj);
-
         _isMagnetizing = false;
     }
-
   public void Ayir(Transform snappedObj)
 {
     if (_snappedObject == null || _snappedObject != snappedObj) return;
-    
     AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     if (avo != null) avo.BaglantiKopart(probNumarasi);
-    
     if (mesajText != null)
     {
         mesajText.gameObject.SetActive(false);
     }
-
     var rb = snappedObj.GetComponent<Rigidbody>();
     if (rb != null)
     {
         rb.isKinematic = false; 
         rb.useGravity = true;  
     }
-   
     if (_snappedInteractable != null)
     {
         _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
         _snappedInteractable.trackPosition = true;
         _snappedInteractable.trackRotation = true;
     }
-
     _snappedObject = null;
     _snappedInteractable = null;
     isConnected = false;
     Debug.Log(gameObject.name + " pini tamamen serbest bıraktı.");
-
-
 onObjectUnsnapped?.Invoke();
 if (HVManager.Instance != null)
 {
     HVManager.Instance.BaglantiDurumunuGuncelle();
 }
-
-
 }
-
     private void TutuluncaAyir(SelectEnterEventArgs args)
     {
         if (_snappedObject == null) return;
         Ayir(_snappedObject);
     }
-
     private void OnDestroy()
     {
         if (_snappedInteractable != null)
             _snappedInteractable.selectEntered.RemoveListener(TutuluncaAyir);
     }
-
-
     public PinKimligi GetSnappedPinKimligi()
     {
         return _snappedObject != null ? _snappedObject.GetComponent<PinKimligi>() : null;

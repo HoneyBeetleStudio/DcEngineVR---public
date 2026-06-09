@@ -1,16 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
-
 public class VRChecklistManager : MonoBehaviour
 {
-    [Header("Prefabs & UI Elements")]
-    [Tooltip("Task listesinin barınacağı Vertical Layout Group veya Content transformu.")]
     public Transform contentContainer;
-    
-    [Tooltip("İçerisinde Toggle ve TextMeshPro olan Checklist Item Prefabı.")]
     public GameObject checklistItemPrefab;
-
-    [Header("Task List (Auto-Populated)")]
     public List<string> tasks = new List<string>
     {
         "Check for physical risks (impact, looseness, arcing, leakage).",
@@ -27,61 +20,48 @@ public class VRChecklistManager : MonoBehaviour
         "If present, repeat isolation tests for additional components (e.g., A/C compressor).",
         "Confirm and report that the results comply with the standard (500 ohm/V)."
     };
-
     private List<VRChecklistItem> instantiatedItems = new List<VRChecklistItem>();
-
     private void Start()
     {
-        PopulateChecklist();
-        InitializeSequentialLogic();
+        populateChecklist();
+        initializeSequentialLogic();
     }
-
-    private void PopulateChecklist()
+    private void populateChecklist()
     {
         foreach (Transform child in contentContainer)
         {
             Destroy(child.gameObject);
         }
-
         instantiatedItems.Clear();
-
         foreach (string taskText in tasks)
         {
             GameObject newItem = Instantiate(checklistItemPrefab, contentContainer);
-            
             VRChecklistItem itemScript = newItem.GetComponent<VRChecklistItem>();
-            
             if (itemScript != null)
             {
                 if (itemScript.taskText != null)
                 {
                     itemScript.taskText.text = taskText;
                 }
-
                 if (itemScript.checkbox != null)
                 {
                     itemScript.checkbox.isOn = false;
                 }
-
                 instantiatedItems.Add(itemScript);
             }
         }
     }
-
-    private void InitializeSequentialLogic()
+    private void initializeSequentialLogic()
     {
         for (int i = 0; i < instantiatedItems.Count; i++)
         {
             int index = i; 
             var item = instantiatedItems[i];
-            
-            item.checkbox.onValueChanged.AddListener((isOn) => OnItemToggled(index, isOn));
-            
-            item.SetInteractable(i == 0);
+            item.checkbox.onValueChanged.AddListener((isOn) => onItemToggled(index, isOn));
+            item.setInteractable(i == 0);
         }
     }
-
-    private void OnItemToggled(int index, bool isOn)
+    private void onItemToggled(int index, bool isOn)
     {
         if (isOn)
         {
@@ -90,7 +70,7 @@ public class VRChecklistManager : MonoBehaviour
                 var nextItem = instantiatedItems[index + 1];
                 if (nextItem != null)
                 {
-                    nextItem.SetInteractable(true);
+                    nextItem.setInteractable(true);
                 }
             }
         }
@@ -99,7 +79,7 @@ public class VRChecklistManager : MonoBehaviour
             for (int i = index + 1; i < instantiatedItems.Count; i++)
             {
                 instantiatedItems[i].checkbox.isOn = false;
-                instantiatedItems[i].SetInteractable(false);
+                instantiatedItems[i].setInteractable(false);
             }
         }
     }

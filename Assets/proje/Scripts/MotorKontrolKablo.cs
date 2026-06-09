@@ -1,5 +1,4 @@
 using UnityEngine;
-
 public class MotorKontrolKablo : MonoBehaviour
 {
     public Transform pervaneObjesi;
@@ -8,7 +7,6 @@ public class MotorKontrolKablo : MonoBehaviour
     public float donusHizi = 1000f;
     public Vector3 donusYonVektoru = new Vector3(0, 0, 1);
     private bool motorAcik = false;
-
     void Update()
     {
         bool kablolarBagli = kablo1 != null && kablo2 != null && kablo1.isConnected && kablo2.isConnected;
@@ -17,7 +15,6 @@ public class MotorKontrolKablo : MonoBehaviour
             pervaneObjesi.Rotate(donusYonVektoru * donusHizi * Time.deltaTime, Space.Self);
         }
     }
-
     public void DurumuDegistir()
     {
         motorAcik = !motorAcik;

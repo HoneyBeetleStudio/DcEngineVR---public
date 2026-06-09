@@ -4,14 +4,12 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using GogoGaga.OptimizedRopesAndCables;
-
 [RequireComponent(typeof(XRGrabInteractable))]
 public class KabloGrabHighlight : MonoBehaviour
 {
     public List<SnapTarget> snapTargetlar;
     public bool otomatikBul = true;
     public KabloYonOku yonOku;
-
     [Header("Bağlı değilken eve dönüş (parent ile)")]
     [Tooltip("Hiçbir sokete takılı değilken bırakınca kayıtlı transformlar başlangıç yerel pozlarına döner")]
     public bool eveDonWhenNotSnapped = true;
@@ -24,13 +22,10 @@ public class KabloGrabHighlight : MonoBehaviour
     [Header("Eve highlight")]
     [Tooltip("Eve vardıktan sonra bağlanmamış soket highlight'ının kalma süresi (saniye)")]
     public float eveHighlightSuresi = 4f;
-
     private XRGrabInteractable _grabInteractable;
     private Rope _rope;
-
     private Coroutine _eveDonCoroutine;
     private readonly List<HomePoseRecord> _homeRecords = new List<HomePoseRecord>();
-
     private sealed class HomePoseRecord
     {
         public Transform Transform;
@@ -39,12 +34,10 @@ public class KabloGrabHighlight : MonoBehaviour
         public Vector3 LocalScale;
         public Transform Parent;
     }
-
     private void Awake()
     {
         _grabInteractable = GetComponent<XRGrabInteractable>();
         _rope = GetComponent<Rope>() ?? GetComponentInParent<Rope>();
-
         if (_grabInteractable != null)
         {
             _grabInteractable.selectEntered.RemoveListener(OnGrabbed);
@@ -53,15 +46,12 @@ public class KabloGrabHighlight : MonoBehaviour
             _grabInteractable.selectExited.AddListener(OnReleased);
         }
     }
-
     private void Start()
     {
         if (otomatikBul && (snapTargetlar == null || snapTargetlar.Count == 0))
             snapTargetlar = new List<SnapTarget>(FindObjectsByType<SnapTarget>(FindObjectsSortMode.None));
-
         CaptureHomeTransforms();
     }
-
     private void OnEnable()
     {
         if (_grabInteractable != null)
@@ -70,7 +60,6 @@ public class KabloGrabHighlight : MonoBehaviour
             _grabInteractable.selectExited.AddListener(OnReleased);
         }
     }
-
     private void OnDisable()
     {
         if (_grabInteractable != null)
@@ -78,15 +67,12 @@ public class KabloGrabHighlight : MonoBehaviour
             _grabInteractable.selectEntered.RemoveListener(OnGrabbed);
             _grabInteractable.selectExited.RemoveListener(OnReleased);
         }
-
         if (_eveDonCoroutine != null)
         {
             StopCoroutine(_eveDonCoroutine);
             _eveDonCoroutine = null;
         }
     }
-
-    /// <summary>Oyun veya sahne düzeninde prefab yeniden yüklendikten sonra çağrılabilir.</summary>
     public void CaptureHomeTransforms()
     {
         _homeRecords.Clear();
@@ -105,7 +91,6 @@ public class KabloGrabHighlight : MonoBehaviour
             t = t.parent;
         }
     }
-
     private void OnGrabbed(SelectEnterEventArgs args)
     {
         if (_eveDonCoroutine != null)
@@ -113,9 +98,7 @@ public class KabloGrabHighlight : MonoBehaviour
             StopCoroutine(_eveDonCoroutine);
             _eveDonCoroutine = null;
         }
-
         _rope?.SetEndpointHeld(true);
-
         if (snapTargetlar != null)
         {
             foreach (var target in snapTargetlar)
@@ -124,11 +107,9 @@ public class KabloGrabHighlight : MonoBehaviour
                     target.HighlightAc();
             }
         }
-
         if (yonOku != null)
             yonOku.KabloTutuldu(this, snapTargetlar);
     }
-
     private void OnReleased(SelectExitEventArgs args)
     {
         if (snapTargetlar != null)
@@ -139,7 +120,6 @@ public class KabloGrabHighlight : MonoBehaviour
                     target.HighlightKapat();
             }
         }
-
         bool birSoketeBaglandi = false;
         if (snapTargetlar != null)
         {
@@ -152,20 +132,15 @@ public class KabloGrabHighlight : MonoBehaviour
                 }
             }
         }
-
         var rb = GetComponent<Rigidbody>();
         if (rb != null && !birSoketeBaglandi)
             rb.isKinematic = false;
-
         if (yonOku != null && !birSoketeBaglandi)
             yonOku.KabloBirakildi();
-
         _rope?.SetEndpointHeld(false);
-
         if (!birSoketeBaglandi && eveDonWhenNotSnapped && _homeRecords.Count > 0)
             _eveDonCoroutine = StartCoroutine(EveDonVeHighlightRoutine(rb));
     }
-
     private IEnumerator EveDonVeHighlightRoutine(Rigidbody rb)
     {
         if (rb != null)
@@ -174,7 +149,6 @@ public class KabloGrabHighlight : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
         }
-
         if (snapTargetlar != null)
         {
             foreach (var st in snapTargetlar)
@@ -183,7 +157,6 @@ public class KabloGrabHighlight : MonoBehaviour
                     st.HighlightAc();
             }
         }
-
         var lerpFrom = new List<(Vector3 lp, Quaternion lq, Vector3 ls)>(_homeRecords.Count);
         foreach (var r in _homeRecords)
         {
@@ -192,29 +165,24 @@ public class KabloGrabHighlight : MonoBehaviour
                 lerpFrom.Add((Vector3.zero, Quaternion.identity, Vector3.one));
                 continue;
             }
-
             lerpFrom.Add((r.Transform.localPosition, r.Transform.localRotation, r.Transform.localScale));
         }
-
         float elapsed = 0f;
         while (elapsed < eveDonSure)
         {
             elapsed += Time.deltaTime;
             float a = Mathf.Clamp01(elapsed / eveDonSure);
             a = a * a * (3f - 2f * a);
-
             for (int i = 0; i < _homeRecords.Count; i++)
             {
                 var rec = _homeRecords[i];
                 if (rec.Transform == null || rec.Transform.parent != rec.Parent)
                     continue;
-
                 var fr = lerpFrom[i];
                 rec.Transform.localPosition = Vector3.Lerp(fr.lp, rec.LocalPosition, a);
                 rec.Transform.localRotation = Quaternion.Slerp(fr.lq, rec.LocalRotation, a);
                 rec.Transform.localScale = Vector3.Lerp(fr.ls, rec.LocalScale, a);
             }
-
             bool bagli = false;
             if (snapTargetlar != null)
             {
@@ -227,17 +195,14 @@ public class KabloGrabHighlight : MonoBehaviour
                     }
                 }
             }
-
             if (bagli || (_grabInteractable != null && _grabInteractable.isSelected))
             {
                 EveDonIptalHighlightVeRb(rb);
                 _eveDonCoroutine = null;
                 yield break;
             }
-
             yield return null;
         }
-
         for (int i = 0; i < _homeRecords.Count; i++)
         {
             var rec = _homeRecords[i];
@@ -247,18 +212,14 @@ public class KabloGrabHighlight : MonoBehaviour
             rec.Transform.localRotation = rec.LocalRotation;
             rec.Transform.localScale = rec.LocalScale;
         }
-
         _rope?.RecalculateRope();
-
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = false;
         }
-
         yield return new WaitForSeconds(eveHighlightSuresi);
-
         if (snapTargetlar != null)
         {
             foreach (var st in snapTargetlar)
@@ -267,10 +228,8 @@ public class KabloGrabHighlight : MonoBehaviour
                     st.HighlightKapat();
             }
         }
-
         _eveDonCoroutine = null;
     }
-
     private void EveDonIptalHighlightVeRb(Rigidbody rb)
     {
         if (snapTargetlar != null)
@@ -281,7 +240,6 @@ public class KabloGrabHighlight : MonoBehaviour
                     st.HighlightKapat();
             }
         }
-
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
