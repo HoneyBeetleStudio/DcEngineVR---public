@@ -11,7 +11,6 @@ public class ManualConnectPlug : MonoBehaviour
     public float connectDistance = 0.1f;
     public string connectionMessage = "Bağlantı Başarılı!";
     [Header("Görsel Geri Bildirim")]
-    [Tooltip("Bağlanabilir olduğunu göstermek için bu obje tutulduğunda hedefte aktif edilecek görsel (Highlight/Outline).")]
     public GameObject targetHighlight;
     [Header("Highlight Renk Ayarları")]
     public Color highlightColor = new Color(0.8f, 1f, 0f, 0.5f); 
@@ -21,7 +20,6 @@ public class ManualConnectPlug : MonoBehaviour
     public TextMeshProUGUI uiTextOutput;
     public float messageDuration = 3f;
     [Header("Ayrılma Ayarları")]
-    [Tooltip("Bağlandıktan kaç saniye sonra otomatik ayrılsın? (0 ise otomatik ayrılmaz)")]
     public float autoDisconnectTime = 3f;
     private XRGrabInteractable _grab;
     private Rigidbody _rb;

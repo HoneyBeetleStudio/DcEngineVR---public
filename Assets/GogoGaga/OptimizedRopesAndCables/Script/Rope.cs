@@ -13,111 +13,69 @@ namespace GogoGaga.OptimizedRopesAndCables
         public event Action OnPointsChanged;
 
         [Header("Rope Transforms")]
-        [Tooltip("The rope will start at this point")]
         [SerializeField] private Transform startPoint;
         public Transform StartPoint => startPoint;
-
-        [Tooltip("This will move at the center hanging from the rope, like a necklace, for example")]
         [SerializeField] private Transform midPoint;
         public Transform MidPoint => midPoint;
-
-        [Tooltip("The rope will end at this point")]
         [SerializeField] private Transform endPoint;
         public Transform EndPoint => endPoint;
 
         [Header("Uç / orta transform (Inspector)")]
-        [Tooltip("false: Auto Return uç transforma pozisyon yazmaz (XR/fizik uçları taşır; ip sadece okur). true: kinematik dönüşte endPoint.position hareket eder")]
         [SerializeField] private bool ropeMutatesEndTransform = false;
-        [Tooltip("false: midPoint transform pozisyonu güncellenmez (sabit kalır). true: eğrideki kontrol noktasını takip eder (eski paket davranışı)")]
         [SerializeField] private bool driveMidPointTransform = false;
 
         [Header("Rope Settings")]
-        [Tooltip("How many points should the rope have, 2 would be a triangle with straight lines, 100 would be a very flexible rope with many parts")]
         [Range(2, 100)] public int linePoints = 10;
-
-        [Tooltip("Value highly dependent on use case, a metal cable would have high stiffness, a rubber rope would have a low one")]
         public float stiffness = 1800f;
-
-        [Tooltip("0 is no damping, 50 is a lot. Higher = less wobble, calmer cable")]
         public float damping = 46f;
-
-        [Tooltip("Orta kontrol noktasının max hızı (0 = sınır yok). Ani sarsıntılarda ipin uçmasını keser")]
         [Min(0f)] public float maxMidVelocity = 5f;
-
-        [Tooltip("Her fizik adımında orta noktayı hedefe doğrudan yaklaştırır (0 = sadece yay). Yüksek = kablo gibi daha sabit")]
         [Range(0f, 1f)] public float midHardSnap = 0.28f;
-
-        [Tooltip("How long is the rope, it will hang more or less from starting point to end point depending on this value")]
         public float ropeLength = 15;
-
-        [Tooltip("The Rope width set at start (changing this value during run time will produce no effect)")]
         public float ropeWidth = 0.1f;
 
         [Header("Collision Settings")]
-        [Tooltip("İpin collider'larla çarpışmasını etkinleştirir")]
         [SerializeField] private bool enableCollision = true;
-        [Tooltip("Gerçekçi kablo ağırlığı (Yere Raycast ile yapışma/sarkma)")]
-        [SerializeField] private bool enableGroundRaycast = true;
-        [Tooltip("Kablo yere çarptığında ne kadar sertçe yere yapışacak (0.1 yumuşak, 1.0 anında)")]
+        [SerializeField] private bool enableGroundRaycast = false;
         [Range(0f, 1f)][SerializeField] private float groundSagStrength = 0.5f;
-        [Tooltip("Yere çarpma testi için raycast mesafesi")]
         [SerializeField] private float groundRaycastLength = 5f;
-        [Tooltip("Çarpışma kontrolü yapılacak layer'lar")]
         [SerializeField] private LayerMask collisionLayers = ~0;
-        [Tooltip("İpin yüzey üzerinde tutulacağı mesafe")]
         [SerializeField] private float collisionOffset = 0.02f;
-        [Tooltip("Nüfuz çözümü için iterasyon sayısı")]
         [Range(1, 10)][SerializeField] private int collisionIterations = 5;
-        [Tooltip("Start/End point yakınındaki noktalara collision uygulanmaz")]
         [Range(0f, 0.4f)][SerializeField] private float endpointDeadzone = 0.15f;
 
         [Header("Collision Improvements")]
-        [Tooltip("Use the hit normal to resolve collisions instead of just pushing UP (Y-axis).")]
-        public bool useNormalForCollision = true;
+        public bool useNormalForCollision = false;
 
         [Header("Rational Bezier Weight Control")]
-        [Tooltip("Adjust the middle control point weight for the Rational Bezier curve")]
         [Range(1, 15)] public float midPointWeight = 1f;
         private const float StartPointWeight = 1f;
         private const float EndPointWeight = 1f;
 
         [Header("Midpoint Position")]
-        [Tooltip("Position of the midpoint along the line between start and end points")]
         [Range(0.25f, 0.75f)] public float midPointPosition = 0.5f;
 
         [Header("Distance Enforcement")]
-        [Tooltip("Maximum allowed physical distance between Start and End points")]
         public float maxDistance = 10f;
-        [Tooltip("Enforce maximum physical distance between Start and End points")]
         public bool enforceMaxDistance = true;
-        [Tooltip("Kablo max uzunluğa ulaştığında bu obje sürüklenir (Inspector'dan ata)")]
         public Transform dragTarget;
-        [Tooltip("Max mesafe aşıldığında tek FixedUpdate'te eklenebilecek düzeltme hızı üst sınırı (m/s). Yüksek değer lastik gibi fırlatır")]
         [Min(0.5f)] public float maxDistanceCorrectionSpeed = 8f;
 
+        [Header("Dynamic Length (Retractable)")]
+        public bool isRetractable = true;
+        [Min(0.01f)] public float retractableSlack = 0.15f;
+
         [Header("Auto Return")]
-        [Tooltip("Bırakıldıktan sonra kablo başlangıç konumuna döner")]
-        public bool enableAutoReturn = true;
-        [Tooltip("Geri dönmeden önce bekleme süresi (saniye)")]
+        public bool enableAutoReturn = false;
         public float autoReturnDelay = 2.0f;
-        [Tooltip("Geri dönme genel hız çarpanı (kinematik uç için SmoothDamp, rigidbody için hedef hız ölçeği)")]
         public float autoReturnSpeed = 0.85f;
-        [Tooltip("Rigidbody eve dönerken max lineer hız (m/s)")]
         [Min(0.05f)] public float autoReturnMaxSpeed = 0.5f;
-        [Tooltip("Rigidbody hızının hedefe yaklaşma katsayısı (düşük = daha yumuşak, örn. 1.5–3)")]
         [Min(0.25f)] public float autoReturnVelocityBlend = 2.4f;
-        [Tooltip("Bu mesafenin altındaysa 'yerine geldi' sayılır")]
         public float returnedThreshold = 0.15f;
-        [Tooltip("Dışarıdan true yapılırsa kablo geri dönmez (sokete takılı vb.)")]
         public bool isEndpointAttached = false;
 
         [Header("Bırakma (tut / bırak)")]
-        [Tooltip("Bırakınca uç rigidbody hızı bu oranla çarpılır (0–1). Küçük = daha az lastik sıçraması")]
         [Range(0f, 1f)] public float releaseBodyVelocityDamp = 0.38f;
-        [Tooltip("Bırakınca ip eğrisi orta nokta hızı bu oranla sönümlenir")]
         [Range(0f, 1f)] public float releaseMidCurveDamp = 0.22f;
-
-        // --- private state ---
         private Vector3 currentValue;
         private Vector3 currentVelocity;
         private Vector3 targetValue;
@@ -140,21 +98,15 @@ namespace GogoGaga.OptimizedRopesAndCables
         private float prevMidHardSnap;
 
         private Vector3[] cachedPoints;
-
-        // Auto-return state
         private bool _isEndpointHeld = false;
         private float _autoReturnTimer = 0f;
         private bool _isReturning = false;
         private Vector3 _returnSmoothVelocity = Vector3.zero;
-
-        // Cached references
         private Rigidbody _cachedEndRb;
         private Rigidbody _cachedDragRb;
         private Vector3 _endInitialWorldPos;
 
         public bool IsPrefab => gameObject.scene.rootCount == 0;
-
-        // ===================== LIFECYCLE =====================
 
         private void Start()
         {
@@ -174,8 +126,6 @@ namespace GogoGaga.OptimizedRopesAndCables
                 _cachedDragRb = dragTarget.GetComponent<Rigidbody>() ?? dragTarget.GetComponentInParent<Rigidbody>();
             else if (startPoint != null)
                 _cachedDragRb = startPoint.GetComponentInParent<Rigidbody>();
-
-            // Oyun başındaki endpoint dünya pozisyonunu kaydet
             if (_cachedEndRb != null)
                 _endInitialWorldPos = _cachedEndRb.position;
             else if (endPoint != null)
@@ -253,8 +203,6 @@ namespace GogoGaga.OptimizedRopesAndCables
                 }
             }
         }
-
-        // ===================== PUBLIC API =====================
 
         public void SetEndpointHeld(bool held)
         {
@@ -347,8 +295,6 @@ namespace GogoGaga.OptimizedRopesAndCables
             SetSplinePoint();
         }
 
-        // ===================== DISTANCE ENFORCEMENT =====================
-
         private void EnforceMaxDistance()
         {
             float dist = Vector3.Distance(startPoint.position, endPoint.position);
@@ -356,9 +302,6 @@ namespace GogoGaga.OptimizedRopesAndCables
 
             float overshoot = dist - maxDistance;
             Vector3 dir = (endPoint.position - startPoint.position).normalized;
-
-            // FixedUpdate'te velocity correction: bir fizik adımında gap'i kapatır,
-            // ama joint'leri kırmaz çünkü pozisyon değil hız manipüle ediyoruz.
             Vector3 correctionVelocity = dir * (overshoot / Time.fixedDeltaTime);
             float corrMag = correctionVelocity.magnitude;
             if (corrMag > maxDistanceCorrectionSpeed && corrMag > 1e-5f)
@@ -366,17 +309,13 @@ namespace GogoGaga.OptimizedRopesAndCables
 
             if (_cachedDragRb != null && !_cachedDragRb.isKinematic)
             {
-                // Drag target'ı endpoint'e doğru çek
                 _cachedDragRb.linearVelocity += correctionVelocity;
             }
             else if (_cachedEndRb != null && !_cachedEndRb.isKinematic)
             {
-                // Endpoint'i startPoint'e doğru geri çek
                 _cachedEndRb.linearVelocity -= correctionVelocity;
             }
         }
-
-        // ===================== AUTO RETURN =====================
 
         private void HandleAutoReturn()
         {
@@ -390,8 +329,6 @@ namespace GogoGaga.OptimizedRopesAndCables
             Vector3 returnTarget = _endInitialWorldPos;
             Vector3 currentEndPos = _cachedEndRb != null ? _cachedEndRb.position : endPoint.position;
             float distFromHome = Vector3.Distance(currentEndPos, returnTarget);
-
-            // Zaten yerindeyse
             if (distFromHome <= returnedThreshold)
             {
                 if (_isReturning && _cachedEndRb != null && !_cachedEndRb.isKinematic)
@@ -441,8 +378,6 @@ namespace GogoGaga.OptimizedRopesAndCables
             }
         }
 
-        // ===================== ROPE VISUALS =====================
-
         private bool AreEndPointsValid()
         {
             return startPoint != null && endPoint != null;
@@ -471,11 +406,9 @@ namespace GogoGaga.OptimizedRopesAndCables
                 for (int i = 1 + deadZone; i < linePoints - deadZone; i++)
                 {
                     Vector3 p = cachedPoints[i];
-                    // Noktadan aşağı doğru raycast at
                     if (Physics.Raycast(p + Vector3.up * 0.2f, Vector3.down, out RaycastHit hit, groundRaycastLength + 0.2f, collisionLayers, QueryTriggerInteraction.Ignore))
                     {
                         float targetY = hit.point.y + (ropeWidth / 2f) + collisionOffset;
-                        // Nokta hedefe çok yüksekte değilse yere çek (ağırlık hissi)
                         if (p.y < targetY + 1.5f)
                         {
                             p.y = Mathf.Lerp(p.y, targetY, groundSagStrength);
@@ -520,8 +453,6 @@ namespace GogoGaga.OptimizedRopesAndCables
                     }
                 }
             }
-
-            // İlk ve son noktayı her zaman endpoint'lere sabitle
             cachedPoints[0] = startPoint.position;
             cachedPoints[linePoints] = endPoint.position;
 
@@ -541,7 +472,12 @@ namespace GogoGaga.OptimizedRopesAndCables
             Vector3 startPointPosition = startPoint.position;
             Vector3 endPointPosition = endPoint.position;
             Vector3 midpos = Vector3.Lerp(startPointPosition, endPointPosition, midPointPosition);
-            float yFactor = (ropeLength - Mathf.Min(Vector3.Distance(startPointPosition, endPointPosition), ropeLength)) / CalculateYFactorAdjustment(midPointWeight);
+            
+            float dist = Vector3.Distance(startPointPosition, endPointPosition);
+            float currentLength = isRetractable ? dist + retractableSlack : ropeLength;
+            currentLength = Mathf.Max(currentLength, dist);
+
+            float yFactor = (currentLength - dist) / CalculateYFactorAdjustment(midPointWeight);
             midpos.y -= yFactor;
             return midpos;
         }

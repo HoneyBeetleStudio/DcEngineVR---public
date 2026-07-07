@@ -27,19 +27,16 @@ public void BaglantiGuncelle(int probNo, PinKimligi pin)
         if (probNo == 1) prob1Pin = pin;
         else prob2Pin = pin;
     }
-    Debug.Log($"<color=cyan><b>[TAKILDI]</b></color> {pin.gameObject.name} | Kanal 1: {(prob1Pin != null ? prob1Pin.name : "Boş")} | Kanal 2: {(prob2Pin != null ? prob2Pin.name : "Boş")}");
     KontrolEt();
 }
 public void BaglantiKopart(int probNo)
 {
     if (probNo == 1)
     {
-        if (prob1Pin != null) Debug.Log($"<color=red><b>[TEMİZLENDİ]</b></color> Kanal 1 boşaltıldı: {prob1Pin.name}");
         prob1Pin = null;
     }
     else if (probNo == 2)
     {
-        if (prob2Pin != null) Debug.Log($"<color=red><b>[TEMİZLENDİ]</b></color> Kanal 2 boşaltıldı: {prob2Pin.name}");
         prob2Pin = null;
     }
     KontrolEt();
@@ -97,7 +94,6 @@ public void BaglantiKopart(int probNo)
         kalibrasyonTamamlandi = true;
         anaEkranText.text = "0.000";
         anaEkranText.color = Color.green;
-        Debug.Log("<color=yellow><b>[SİSTEM]</b></color> Cihaz kalibre edildi. Artık ölçüme hazırsınız.");        
         Invoke("HazirModunaGec", 2.0f);
     }
     private void HazirModunaGec()

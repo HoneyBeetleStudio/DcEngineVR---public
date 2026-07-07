@@ -23,19 +23,13 @@ public Vector3 snapLocalRotation = Vector3.zero;
     public bool magnetEffect = true;
     public float magnetDuration = 0.15f;
     [Header("Highlight")]
-    [Tooltip("Ek vurgu mesh’i (halka vb.). Boş bırakılabilir — o zaman sadece soket mesh’i kullanılır.")]
     public GameObject highlightObject;
-    [Tooltip("Soketin kendi mesh’lerini de vurgula (takılacak yeri görmek için genelde açık kalsın).")]
     public bool highlightIncludeSocketMesh = true;
     public bool emissionHighlight = true;
     public Color highlightColor = new Color(0.2f, 1f, 0.35f, 1f);
-    [Tooltip("Emission çarpanı — yüksek = daha parlak (Bloom ile çok görünür).")]
     [Range(0f, 20f)] public float emissionSiddeti = 8f;
-    [Tooltip("Emission HDR kanal tavanı; bloom ile tüm yüzey bembeyaz oluyorsa düşürün (ör. 3–6).")]
     [Min(0f)] public float maxEmissionChannelValue = 5f;
-    [Tooltip("Ana renge ne kadar yaklaşsın (0 = hafif, 1 = tam highlight rengi). preserveBaseColorDuringHighlight kapalıyken kullanılır.")]
     [Range(0f, 1f)] public float baseRenkKarisimi = 0.75f;
-    [Tooltip("Açıksa HighlightAc ana/base rengi değiştirmez; sadece emission vurgular. Tutunca materyalin kendi rengi korunur.")]
     public bool preserveBaseColorDuringHighlight = true;
     private Renderer[] _highlightRenderers;
     private Color[] _originalColors;
@@ -386,12 +380,11 @@ AvometreSistemi avo = FindFirstObjectByType<AvometreSistemi>();
     _snappedObject = null;
     _snappedInteractable = null;
     isConnected = false;
-    Debug.Log(gameObject.name + " pini tamamen serbest bıraktı.");
-onObjectUnsnapped?.Invoke();
-if (HVManager.Instance != null)
-{
-    HVManager.Instance.BaglantiDurumunuGuncelle();
-}
+    onObjectUnsnapped?.Invoke();
+    if (HVManager.Instance != null)
+    {
+        HVManager.Instance.BaglantiDurumunuGuncelle();
+    }
 }
     private void TutuluncaAyir(SelectEnterEventArgs args)
     {

@@ -816,7 +816,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbceecb52a4078c4194f6b8169787a35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onObjectSnapped:
+    m_PersistentCalls:
+      m_Calls: []
+  onObjectUnsnapped:
+    m_PersistentCalls:
+      m_Calls: []
   probNumarasi: 0
+  snapLocalRotation: {x: 0, y: 0, z: 0}
   snappableObject: {fileID: 917515320}
   isConnected: 0
   snapLocalOffset: {x: 0, y: 0, z: 0}
@@ -825,9 +832,13 @@ MonoBehaviour:
   magnetEffect: 1
   magnetDuration: 0.15
   highlightObject: {fileID: 0}
+  highlightIncludeSocketMesh: 1
   emissionHighlight: 1
   highlightColor: {r: 0, g: 1, b: 0, a: 1}
   emissionSiddeti: 2
+  maxEmissionChannelValue: 5
+  baseRenkKarisimi: 0.75
+  preserveBaseColorDuringHighlight: 1
 --- !u!65 &115955320
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4063,13 +4074,43 @@ MonoBehaviour:
   startPoint: {fileID: 1117409450}
   midPoint: {fileID: 0}
   endPoint: {fileID: 917515320}
+  ropeMutatesEndTransform: 0
+  driveMidPointTransform: 0
   linePoints: 10
   stiffness: 350
   damping: 15
+  maxMidVelocity: 5
+  midHardSnap: 0.28
   ropeLength: 15
   ropeWidth: 0.2
+  enableCollision: 1
+  enableGroundRaycast: 0
+  groundSagStrength: 0.5
+  groundRaycastLength: 5
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  collisionOffset: 0.02
+  collisionIterations: 5
+  endpointDeadzone: 0.15
+  useNormalForCollision: 0
   midPointWeight: 1
   midPointPosition: 0.5
+  maxDistance: 10
+  enforceMaxDistance: 1
+  dragTarget: {fileID: 0}
+  maxDistanceCorrectionSpeed: 8
+  isRetractable: 1
+  retractableSlack: 0.15
+  enableAutoReturn: 0
+  autoReturnDelay: 2
+  autoReturnSpeed: 0.85
+  autoReturnMaxSpeed: 0.5
+  autoReturnVelocityBlend: 2.4
+  returnedThreshold: 0.15
+  isEndpointAttached: 0
+  releaseBodyVelocityDamp: 0.38
+  releaseMidCurveDamp: 0.22
 --- !u!120 &386393169
 LineRenderer:
   serializedVersion: 2
@@ -4117,15 +4158,15 @@ LineRenderer:
   m_SortingOrder: 0
   m_Positions:
   - {x: 8.677123, y: 18.164999, z: -3.3005}
-  - {x: 8.677182, y: 16.409372, z: -2.928434}
-  - {x: 8.677241, y: 14.813997, z: -2.5563684}
-  - {x: 8.6773, y: 13.37887, z: -2.184302}
-  - {x: 8.677359, y: 12.103994, z: -1.8122367}
-  - {x: 8.677418, y: 10.989369, z: -1.4401708}
-  - {x: 8.677476, y: 10.034994, z: -1.0681046}
-  - {x: 8.677535, y: 9.24087, z: -0.69603896}
-  - {x: 8.677594, y: 8.606997, z: -0.32397306}
-  - {x: 8.677652, y: 8.133373, z: 0.048092663}
+  - {x: 8.677182, y: 17.103498, z: -2.928434}
+  - {x: 8.677241, y: 16.048, z: -2.5563684}
+  - {x: 8.6773, y: 14.9985, z: -2.184302}
+  - {x: 8.677359, y: 13.955, z: -1.8122367}
+  - {x: 8.677418, y: 12.9175, z: -1.4401708}
+  - {x: 8.677476, y: 11.885999, z: -1.0681046}
+  - {x: 8.677535, y: 10.860499, z: -0.69603896}
+  - {x: 8.677594, y: 9.841, z: -0.32397306}
+  - {x: 8.677652, y: 8.8275, z: 0.048092663}
   - {x: 8.6777115, y: 7.8199997, z: 0.42015862}
   m_Parameters:
     serializedVersion: 3
@@ -4749,6 +4790,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1767192433, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1401129087}
+    - targetCorrespondingSourceObject: {fileID: 1767192433, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1401129088}
   m_SourcePrefab: {fileID: 100100000, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
 --- !u!114 &446458107 stripped
 MonoBehaviour:
@@ -10894,7 +10938,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1401129074}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a2a9c34df4095f47b9ca8f975175f5b, type: 3}
   m_Name: 
@@ -10905,6 +10949,107 @@ MonoBehaviour:
   m_TrackingType: 0
   m_UpdateType: 0
   m_UseRelativeTransform: 0
+--- !u!114 &1401129088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401129074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2fadf230d1919748a9aa21d40f74619, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_TrackingType: 0
+  m_UpdateType: 0
+  m_IgnoreTrackingState: 0
+  m_PositionInput:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Position
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 0bacfa51-7938-4a88-adae-9e8ba6c59d23
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: f5efb008-b167-4d0f-b9e0-49a2350a85b3
+        m_Path: <XRHMD>/centerEyePosition
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Position
+        m_Flags: 0
+      m_Flags: 0
+    m_Reference: {fileID: 7862207684358717888, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  m_RotationInput:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Rotation
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 5439f14e-c9da-4bd1-ad3f-7121a75c10d9
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: f984a7fd-f7e2-45ef-b21d-699a5d160f29
+        m_Path: <XRHMD>/centerEyeRotation
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Rotation
+        m_Flags: 0
+      m_Flags: 0
+    m_Reference: {fileID: -530380113134220495, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  m_TrackingStateInput:
+    m_UseReference: 1
+    m_Action:
+      m_Name: Tracking State Input
+      m_Type: 0
+      m_ExpectedControlType: Integer
+      m_Id: be9cc21d-5595-4ea6-aa72-e48652a11968
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 1031966339891076899, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  m_PositionAction:
+    m_Name: Position
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 0bacfa51-7938-4a88-adae-9e8ba6c59d23
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: f5efb008-b167-4d0f-b9e0-49a2350a85b3
+      m_Path: <XRHMD>/centerEyePosition
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Position
+      m_Flags: 0
+    m_Flags: 0
+  m_RotationAction:
+    m_Name: Rotation
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 5439f14e-c9da-4bd1-ad3f-7121a75c10d9
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: f984a7fd-f7e2-45ef-b21d-699a5d160f29
+      m_Path: <XRHMD>/centerEyeRotation
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Rotation
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &1418389442
 GameObject:
   m_ObjectHideFlags: 0
@@ -12272,7 +12417,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbceecb52a4078c4194f6b8169787a35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  onObjectSnapped:
+    m_PersistentCalls:
+      m_Calls: []
+  onObjectUnsnapped:
+    m_PersistentCalls:
+      m_Calls: []
   probNumarasi: 0
+  snapLocalRotation: {x: 0, y: 0, z: 0}
   snappableObject: {fileID: 1064158784}
   isConnected: 0
   snapLocalOffset: {x: 0, y: 0, z: 0}
@@ -12281,9 +12433,13 @@ MonoBehaviour:
   magnetEffect: 1
   magnetDuration: 0.15
   highlightObject: {fileID: 0}
+  highlightIncludeSocketMesh: 1
   emissionHighlight: 1
   highlightColor: {r: 0, g: 1, b: 0, a: 1}
   emissionSiddeti: 2
+  maxEmissionChannelValue: 5
+  baseRenkKarisimi: 0.75
+  preserveBaseColorDuringHighlight: 1
 --- !u!65 &1501161014
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -13631,13 +13787,43 @@ MonoBehaviour:
   startPoint: {fileID: 459299627}
   midPoint: {fileID: 0}
   endPoint: {fileID: 1064158784}
+  ropeMutatesEndTransform: 0
+  driveMidPointTransform: 0
   linePoints: 10
   stiffness: 350
   damping: 15
+  maxMidVelocity: 5
+  midHardSnap: 0.28
   ropeLength: 15
   ropeWidth: 0.2
+  enableCollision: 1
+  enableGroundRaycast: 0
+  groundSagStrength: 0.5
+  groundRaycastLength: 5
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  collisionOffset: 0.02
+  collisionIterations: 5
+  endpointDeadzone: 0.15
+  useNormalForCollision: 0
   midPointWeight: 1
   midPointPosition: 0.5
+  maxDistance: 10
+  enforceMaxDistance: 1
+  dragTarget: {fileID: 0}
+  maxDistanceCorrectionSpeed: 8
+  isRetractable: 1
+  retractableSlack: 0.15
+  enableAutoReturn: 0
+  autoReturnDelay: 2
+  autoReturnSpeed: 0.85
+  autoReturnMaxSpeed: 0.5
+  autoReturnVelocityBlend: 2.4
+  returnedThreshold: 0.15
+  isEndpointAttached: 0
+  releaseBodyVelocityDamp: 0.38
+  releaseMidCurveDamp: 0.22
 --- !u!120 &1656334752
 LineRenderer:
   serializedVersion: 2
@@ -13685,15 +13871,15 @@ LineRenderer:
   m_SortingOrder: 0
   m_Positions:
   - {x: 8.528366, y: 18.154999, z: 11.524992}
-  - {x: 8.528308, y: 16.398678, z: 11.152926}
-  - {x: 8.528249, y: 14.802985, z: 10.780861}
-  - {x: 8.52819, y: 13.367918, z: 10.408794}
-  - {x: 8.5281315, y: 12.093477, z: 10.03673}
-  - {x: 8.528072, y: 10.979664, z: 9.664663}
-  - {x: 8.528013, y: 10.026478, z: 9.292597}
-  - {x: 8.527954, y: 9.233918, z: 8.920531}
-  - {x: 8.527895, y: 8.601986, z: 8.548466}
-  - {x: 8.527836, y: 8.130679, z: 8.176399}
+  - {x: 8.528308, y: 17.0945, z: 11.152926}
+  - {x: 8.528249, y: 16.039999, z: 10.780861}
+  - {x: 8.52819, y: 14.9915, z: 10.408794}
+  - {x: 8.5281315, y: 13.948999, z: 10.03673}
+  - {x: 8.528072, y: 12.912499, z: 9.664663}
+  - {x: 8.528013, y: 11.881999, z: 9.292597}
+  - {x: 8.527954, y: 10.857499, z: 8.920531}
+  - {x: 8.527895, y: 9.839001, z: 8.548466}
+  - {x: 8.527836, y: 8.8265, z: 8.176399}
   - {x: 8.527778, y: 7.8199997, z: 7.8043337}
   m_Parameters:
     serializedVersion: 3

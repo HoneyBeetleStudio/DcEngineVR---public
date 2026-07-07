@@ -46,7 +46,6 @@ public class AraKonnektorSistemi : MonoBehaviour
             _avo.anaEkranText.color = Color.green;
             _avo.Invoke("HazirModunaGec", 2.0f);
         }
-        Debug.Log("Ara Konnektör Kalibrasyonu Tamamlandı.");
     }
 public void BataryayaTakildi() 
 { 
@@ -59,7 +58,6 @@ public void BataryayaTakildi()
         if (takilanPin.grupAdi == "Batarya_Cikis" || takilanPin.gameObject.name.Contains("obje1"))
         {
             bataryayaBagli = true; 
-            Debug.Log("<color=green>Onaylandı: Batarya bağlantısı sağlandı (Grup: Batarya_Cikis)</color>");
         }
     }
     if(HVManager.Instance != null) HVManager.Instance.BaglantiDurumunuGuncelle();
@@ -67,7 +65,6 @@ public void BataryayaTakildi()
   public void BataryadanCikarildi() 
 { 
     bataryayaBagli = false; 
-    Debug.Log("<color=red>Ara Konnektör Bataryadan AYRILDI!</color>");
     if(HVManager.Instance != null) 
     {
         HVManager.Instance.BaglantiDurumunuGuncelle();

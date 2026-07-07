@@ -10,67 +10,44 @@ public class DevicePlacementSlots : MonoBehaviour
     [System.Serializable]
     public class PlacementSlot
     {
-        [Tooltip("Yer işareti transformu. Boşsa placementSnapTarget'ın transformu kullanılır.")]
         public Transform slot;
-        [Tooltip("SnapTarget ile aynı emission highlight (HighlightAc/Kapat). Doluysa bu slot için highlightVisual ve aşağıdaki renk alanları kullanılmaz.")]
         public SnapTarget placementSnapTarget;
         [FormerlySerializedAs("yaricap")]
-        [Tooltip("Sphere radius when acceptZoneMatchBoundsOf is empty")]
         [Min(0.02f)] public float acceptRadius = 0.22f;
-        [Tooltip("If set, accept sphere uses this object's combined Renderer bounds (center + max extent). " +
-                 "Often a static desk copy of the device mesh. acceptRadius is ignored for this slot.")]
         public Transform acceptZoneMatchBoundsOf;
         [FormerlySerializedAs("highlightGorsel")]
-        [Tooltip("Shown while grabbed — optional")]
         public GameObject highlightVisual;
-        [Tooltip("If set with highlightVisual, highlight is positioned/scaled to match this object's bounds under the slot (e.g. same mesh as device).")]
         public Transform highlightBoundsShapeReference;
         [FormerlySerializedAs("hizalaRotasyon")]
-        [Tooltip("When snapped, movement root aligns to this slot's pose")]
         public bool alignRotation = true;
         [FormerlySerializedAs("ekSlotLocalOffset")]
-        [Tooltip("Offset in slot local space (TransformPoint) — sphere center when not using bounds ref")]
         public Vector3 slotLocalOffset = Vector3.zero;
         [FormerlySerializedAs("ekEulerOffset")]
         public Vector3 eulerOffset = Vector3.zero;
-        [Tooltip("Extra padding added to bounds-derived accept radius")]
         [Min(0f)] public float acceptBoundsPadding = 0.02f;
     }
     [Header("Movement")]
     [FormerlySerializedAs("hareketKoku")]
-    [Tooltip("Root transform that moves when snapping / returning (default: this object)")]
     public Transform movementRoot;
     [FormerlySerializedAs("mesafeSensoru")]
-    [Tooltip("World point used for radius checks (default: movement root). Often device base")]
     public Transform distanceProbe;
     [FormerlySerializedAs("ustParentCaptureDerinligi")]
-    [Tooltip("How many parents (including root) participate in stored local poses")]
     [Range(0, 8)] public int parentChainDepth = 0;
     [FormerlySerializedAs("donusSuresi")]
-    [Tooltip("Smooth return duration when dropped outside all slots")]
     public float returnDuration = 1.8f;
     [Header("Yerleşim toleransı (XR)")]
-    [Tooltip("Kabul yarıçapı bu çarpanla genişletilir (bırakınca el hâlâ hafif hareketliyken)")]
     [Min(1f)] public float acceptRadiusSlack = 1.35f;
-    [Tooltip("Bırakınca fizik/XR pozunun oturması için ek bekleme (saniye)")]
     [Min(0f)] public float postReleaseSettleSeconds = 0.08f;
-    [Tooltip("True: hem distanceProbe hem movementRoot konumundan en yakın mesafe kullanılır")]
     public bool checkBothProbeAndRoot = true;
     [Header("Slots")]
     [FormerlySerializedAs("yerlesimNoktalari")]
     public PlacementSlot[] placementSlots = System.Array.Empty<PlacementSlot>();
     [Header("Highlight fallback (sadece placementSnapTarget yok ve highlightVisual doluysa)")]
-    [Tooltip("Tutunca slot vurgusu (MaterialPropertyBlock)")]
     public Color heldHighlightColor = new Color(0.2f, 1f, 0.28f, 1f);
-    [Tooltip("Bırakınca ana renk — alfa düşük = şeffaf")]
     public Color releasedHighlightColor = new Color(1f, 1f, 1f, 0.08f);
-    [Tooltip("Tutarken emission = renk * bu katsayı")]
     [Min(0f)] public float heldEmissionMultiplier = 4f;
-    [Tooltip("Bırakınca emission çarpanı")]
     [Min(0f)] public float releasedEmissionMultiplier = 0.15f;
-    [Tooltip("Açıksa MPB ile _BaseColor/_Color değiştirilmez; sadece emission. Mesh kendi renginde kalır.")]
     public bool slotHighlightPreserveBaseColor = true;
-    [Tooltip("ApplyTintTree emission HDR tavanı; bloom ile cihaz bembeyaz oluyorsa düşürün (ör. 2–4). 0 = tavan yok.")]
     [Min(0f)] public float slotHighlightMaxEmissionChannel = 3.5f;
     private static readonly int IdBaseColor = Shader.PropertyToID("_BaseColor");
     private static readonly int IdColor = Shader.PropertyToID("_Color");
@@ -367,14 +344,7 @@ public class DevicePlacementSlots : MonoBehaviour
             if (s.highlightVisual == null)
                 continue;
             if (HighlightVisualIsMovementRoot(s))
-            {
-                Debug.LogWarning(
-                    "DevicePlacementSlots: Bu slotta highlightVisual, movementRoot ile aynı obje. " +
-                    "Vurgu tüm cihaza MPB basar ve genelde bembeyaz görünür. " +
-                    "highlightVisual olarak sadece ince bir vurgu mesh’i kullanın veya placementSnapTarget ile SnapTarget vurgusu verin.",
-                    this);
                 continue;
-            }
             if (_highlightHasShapeLayout != null && i < _highlightHasShapeLayout.Length && _highlightHasShapeLayout[i])
             {
                 Transform h = s.highlightVisual.transform;

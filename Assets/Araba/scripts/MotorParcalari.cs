@@ -8,10 +8,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 public class MotorParcalari : MonoBehaviour
 {
     [Header("Sanal Montaj Ayarları")]
-    [Tooltip("Bu parça tutulmadığında hangi objeyi (yuvayı) takip etmeli? Boş bırakılırsa Start'taki parent'ını hedef alır.")]
     public Transform takipHedefi;
     [SerializeField]
-    [Tooltip("Bırakınca yuvaya otomatik geri dönsün mü?")]
     private bool birakincaYuvayaDon = true;
     private XRGrabInteractable _grab;
     private Rigidbody _rb;

@@ -36,13 +36,11 @@ public class HVManager : MonoBehaviour
             {
                 durumText.text = "12.4V";
                 durumText.color = Color.green;
-                Debug.Log("<color=cyan>EKRAN GÜNCELLENDİ: 12.4V</color>");
             }
             else
             {              
                 durumText.text = "0.0V"; 
                 durumText.color = Color.white;
-                Debug.Log("<color=yellow>HATA: Pinler takılı ama batarya onayı alınamadı!</color>");
             }
             return;
         }

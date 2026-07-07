@@ -11,16 +11,11 @@ public class KabloGrabHighlight : MonoBehaviour
     public bool otomatikBul = true;
     public KabloYonOku yonOku;
     [Header("Bağlı değilken eve dönüş (parent ile)")]
-    [Tooltip("Hiçbir sokete takılı değilken bırakınca kayıtlı transformlar başlangıç yerel pozlarına döner")]
     public bool eveDonWhenNotSnapped = true;
-    [Tooltip("Yerel pose kaydı başlayan kök (boş = bu obje). Genelde kablo grubunun üst boş objesi")]
     public Transform eveDonKok;
-    [Tooltip("0: sadece kök, 1: kök + bir üst parent, 2: +2 üst ... (üst motoru da oynatmamak için dikkat)")]
     [Range(0, 8)] public int ustParentCaptureDerinligi = 1;
-    [Tooltip("Eve dönüş animasyon süresi (saniye)")]
     public float eveDonSure = 2.2f;
     [Header("Eve highlight")]
-    [Tooltip("Eve vardıktan sonra bağlanmamış soket highlight'ının kalma süresi (saniye)")]
     public float eveHighlightSuresi = 4f;
     private XRGrabInteractable _grabInteractable;
     private Rope _rope;
