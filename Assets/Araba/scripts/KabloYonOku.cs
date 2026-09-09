@@ -81,7 +81,7 @@ public class KabloYonOku : MonoBehaviour
             if (mesafeText != null)
                 mesafeText.text = $"{minMesafe:F2} m";
             if (ipucuText != null)
-                ipucuText.text = $"En yakın: {enYakin.gameObject.name}";
+                ipucuText.text = $"Nearest: {enYakin.gameObject.name}";
             if (okTransform != null && Camera.main != null)
             {
                 Vector3 hedefEkranPos = Camera.main.WorldToScreenPoint(enYakin.transform.position);

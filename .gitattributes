@@ -1,0 +1,66 @@
+# Line endings are normalised in the repository and checked out natively.
+* text=auto
+
+# ---------------------------------------------------------------
+# Unity YAML — merged with UnityYAMLMerge, never diffed as plain text
+# Requires ForceText asset serialisation (already set in this project).
+# ---------------------------------------------------------------
+*.unity        merge=unityyamlmerge eol=lf
+*.prefab       merge=unityyamlmerge eol=lf
+*.asset        merge=unityyamlmerge eol=lf
+*.mat          merge=unityyamlmerge eol=lf
+*.anim         merge=unityyamlmerge eol=lf
+*.controller   merge=unityyamlmerge eol=lf
+*.overrideController merge=unityyamlmerge eol=lf
+*.physicMaterial     merge=unityyamlmerge eol=lf
+*.meta         merge=unityyamlmerge eol=lf
+*.playable     merge=unityyamlmerge eol=lf
+*.mask         merge=unityyamlmerge eol=lf
+*.terrainlayer merge=unityyamlmerge eol=lf
+*.mixer        merge=unityyamlmerge eol=lf
+*.shadervariants merge=unityyamlmerge eol=lf
+
+# ---------------------------------------------------------------
+# Source and config — plain text
+# ---------------------------------------------------------------
+*.cs           text diff=csharp
+*.shader       text
+*.cginc        text
+*.hlsl         text
+*.json         text
+*.md           text
+*.txt          text
+*.xml          text
+*.yml          text
+*.srt          text
+
+# ---------------------------------------------------------------
+# Binary assets — no diff, no merge attempts
+# ---------------------------------------------------------------
+*.fbx          binary
+*.obj          binary
+*.dae          binary
+*.blend        binary
+*.glb          binary
+*.gltf         binary
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.tga          binary
+*.psd          binary
+*.exr          binary
+*.hdr          binary
+*.tif          binary
+*.mp4          binary
+*.mov          binary
+*.wav          binary
+*.mp3          binary
+*.ogg          binary
+*.ttf          binary
+*.otf          binary
+*.dll          binary
+*.so           binary
+*.a            binary
+*.unitypackage binary
+*.cubemap      binary
+*.bundle       binary

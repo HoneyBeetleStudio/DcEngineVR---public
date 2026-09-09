@@ -17,7 +17,7 @@ public static class LiftSahneKurulum
     const string TexKlasoru = "Assets/Araba/sahne lift/car-lift/textures";
     const string BataryaGlb = "Assets/Araba/textures/wb/Battery Bank .glb";
 
-    const float AracLiftYuksekligi = 1.7f;
+    const float AracLiftYuksekligi = 10f;
 
     static readonly string[] SilinecekAdlar =
     {
@@ -285,8 +285,6 @@ public static class LiftSahneKurulum
             Vector3 sutunOrta = (rack1.position + rack2.position) * 0.5f;
             Vector3 kaydirma = aracMerkez - new Vector3(sutunOrta.x, liftSinir.min.y, sutunOrta.z);
             lift.transform.position += kaydirma;
-
-            Bounds sonSinir = SinirHesapla(lift.transform);
         }
         else
         {
@@ -295,8 +293,6 @@ public static class LiftSahneKurulum
         }
 
         liftPlatformu = CocukBul(lift.transform, "Bone");
-        if (liftPlatformu == null)
-
         return lift;
     }
 
@@ -544,16 +540,17 @@ public static class LiftSahneKurulum
         out GameObject tepsiObj, out GameObject guvenliAlanObj, out GameObject aracAltiObj)
     {
         tepsiObj = new GameObject("TasiyiciTepsi");
-        Vector3 baslangic = new Vector3(aracSinir.center.x, zeminY, aracSinir.center.z)
-            + genisEksen * (Vector3.Scale(aracSinir.size, genisEksen).magnitude * 0.5f + 3.0f);
-        tepsiObj.transform.position = baslangic;
+        Vector3 bataryaXZ = batarya != null
+            ? new Vector3(batarya.position.x, zeminY, batarya.position.z)
+            : new Vector3(aracSinir.center.x, zeminY, aracSinir.center.z);
+        tepsiObj.transform.position = bataryaXZ;
         tepsiObj.transform.rotation = Quaternion.LookRotation(-genisEksen);
 
         var sase = GameObject.CreatePrimitive(PrimitiveType.Cube);
         sase.name = "Sase";
         sase.transform.SetParent(tepsiObj.transform, false);
-        sase.transform.localPosition = new Vector3(0f, 0.12f, 0f);
-        sase.transform.localScale = new Vector3(0.9f, 0.08f, 1.5f);
+        sase.transform.localPosition = new Vector3(0f, 0.22f, 0f);
+        sase.transform.localScale = new Vector3(0.95f, 0.22f, 1.55f);
         sase.GetComponent<Renderer>().sharedMaterial = materyaller["tepsiSari"];
 
         for (int x = -1; x <= 1; x += 2)
@@ -573,66 +570,75 @@ public static class LiftSahneKurulum
 
         var platform = new GameObject("Platform");
         platform.transform.SetParent(tepsiObj.transform, false);
-        platform.transform.localPosition = new Vector3(0f, 0.34f, 0f);
+        platform.transform.localPosition = new Vector3(0f, 1.05f, 0f);
 
         var tabla = GameObject.CreatePrimitive(PrimitiveType.Cube);
         tabla.name = "Tabla";
         tabla.transform.SetParent(platform.transform, false);
-        tabla.transform.localScale = new Vector3(0.85f, 0.06f, 1.4f);
+        tabla.transform.localScale = new Vector3(0.95f, 0.14f, 1.5f);
         tabla.GetComponent<Renderer>().sharedMaterial = materyaller["tepsiSari"];
+        tabla.GetComponent<Collider>().enabled = false;
 
         for (int i = -1; i <= 1; i += 2)
         {
             var makas = GameObject.CreatePrimitive(PrimitiveType.Cube);
             makas.name = "Makas";
-            makas.transform.SetParent(platform.transform, false);
-            makas.transform.localPosition = new Vector3(i * 0.35f, -0.11f, 0f);
-            makas.transform.localRotation = Quaternion.Euler(55f, 0f, 0f);
-            makas.transform.localScale = new Vector3(0.04f, 0.04f, 0.5f);
+            makas.transform.SetParent(tepsiObj.transform, false);
+            makas.transform.localPosition = new Vector3(i * 0.35f, 0.6f, 0f);
+            makas.transform.localRotation = Quaternion.Euler(70f, 0f, 0f);
+            makas.transform.localScale = new Vector3(0.05f, 0.05f, 1.15f);
             makas.GetComponent<Renderer>().sharedMaterial = materyaller["tepsiKoyu"];
             Object.DestroyImmediate(makas.GetComponent<Collider>());
         }
 
+        var makasBag = tepsiObj.AddComponent<TepsiMakas>();
+        makasBag.sase = sase.transform;
+        makasBag.platform = platform.transform;
+
         var tutamacDikey = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         tutamacDikey.name = "TutamacDikey";
         tutamacDikey.transform.SetParent(tepsiObj.transform, false);
-        tutamacDikey.transform.localPosition = new Vector3(0f, 0.6f, 0.78f);
-        tutamacDikey.transform.localScale = new Vector3(0.03f, 0.5f, 0.03f);
+        tutamacDikey.transform.localPosition = new Vector3(0f, 0.9f, 0.82f);
+        tutamacDikey.transform.localScale = new Vector3(0.045f, 0.75f, 0.045f);
         tutamacDikey.GetComponent<Renderer>().sharedMaterial = materyaller["tepsiSari"];
         Object.DestroyImmediate(tutamacDikey.GetComponent<Collider>());
 
         var tutamac = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         tutamac.name = "Tutamac";
         tutamac.transform.SetParent(tepsiObj.transform, false);
-        tutamac.transform.localPosition = new Vector3(0f, 1.1f, 0.78f);
+        tutamac.transform.localPosition = new Vector3(0f, 1.65f, 0.82f);
         tutamac.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-        tutamac.transform.localScale = new Vector3(0.035f, 0.3f, 0.035f);
+        tutamac.transform.localScale = new Vector3(0.05f, 0.35f, 0.05f);
         tutamac.GetComponent<Renderer>().sharedMaterial = materyaller["tepsiKoyu"];
 
         var govdeCol = tepsiObj.AddComponent<BoxCollider>();
-        govdeCol.center = new Vector3(0f, 0.25f, 0f);
-        govdeCol.size = new Vector3(0.95f, 0.45f, 1.6f);
+        govdeCol.center = new Vector3(0f, 0.85f, 0f);
+        govdeCol.size = new Vector3(0.95f, 1.7f, 1.7f);
 
         var rb = tepsiObj.AddComponent<Rigidbody>();
         rb.isKinematic = true;
+        rb.constraints = RigidbodyConstraints.FreezeAll;
 
         var grab = tepsiObj.AddComponent<XRGrabInteractable>();
+        grab.enabled = false;
         grab.throwOnDetach = false;
+        grab.trackPosition = false;
+        grab.trackRotation = false;
         grab.useDynamicAttach = true;
         grab.colliders.Add(govdeCol);
         grab.colliders.Add(tutamac.GetComponent<Collider>());
 
         var platformLift = tepsiObj.AddComponent<LiftController>();
         platformLift.platformlar = new[] { platform.transform };
-        platformLift.hiz = 0.35f;
+        platformLift.hiz = 1.2f;
 
         float bataryaAltiY = batarya != null ? SinirHesapla(batarya).min.y : zeminY + 0.42f;
-        float platformUstuY = zeminY + 0.37f;
-        platformLift.maxYukseklik = Mathf.Clamp(bataryaAltiY + AracLiftYuksekligi - platformUstuY - 0.02f, 0.5f, 2.6f);
+        float platformUstuY = zeminY + 0.69f;
+        platformLift.maxYukseklik = Mathf.Clamp(bataryaAltiY + AracLiftYuksekligi - platformUstuY - 0.02f, 0.5f, 12f);
 
         var butonPaneli = new GameObject("TepsiButonlari");
         butonPaneli.transform.SetParent(tepsiObj.transform, false);
-        butonPaneli.transform.localPosition = new Vector3(0f, 0.98f, 0.74f);
+        butonPaneli.transform.localPosition = new Vector3(0f, 1.5f, 0.78f);
         ButonOlustur(butonPaneli.transform, platformLift, +1, new Vector3(-0.1f, 0f, 0f), materyaller["butonYesil"]);
         ButonOlustur(butonPaneli.transform, platformLift, -1, new Vector3(0.1f, 0f, 0f), materyaller["butonKirmizi"]);
 
@@ -670,6 +676,7 @@ public static class LiftSahneKurulum
         tepsi.batarya = batarya;
         tepsi.aracAltiBolgesi = aracAltiObj.transform;
         tepsi.guvenliAlan = guvenliAlanObj.transform;
+        tepsi.bolgeYaricapi = 4f;
 
         return tepsi;
     }

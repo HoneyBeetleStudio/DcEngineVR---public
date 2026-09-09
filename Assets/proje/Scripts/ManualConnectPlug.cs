@@ -9,7 +9,7 @@ public class ManualConnectPlug : MonoBehaviour
     [Header("Bağlantı Ayarları")]
     public Transform targetSocket;
     public float connectDistance = 0.1f;
-    public string connectionMessage = "Bağlantı Başarılı!";
+    public string connectionMessage = "Connection successful!";
     [Header("Görsel Geri Bildirim")]
     public GameObject targetHighlight;
     [Header("Highlight Renk Ayarları")]

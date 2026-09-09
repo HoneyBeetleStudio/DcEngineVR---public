@@ -292,7 +292,7 @@ public Vector3 snapLocalRotation = Vector3.zero;
         mesajText.gameObject.SetActive(true);      
         if (gameObject.name.ToLower().Contains("fisyeri1"))
         {
-            mesajText.text = "Gerilim Var";           
+            mesajText.text = "Voltage Present";
         }
     }
         if (_snappedInteractable != null)

@@ -97,3 +97,35 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# ---------------------------------------------------------------
+# AI araclari, MCP sunuculari ve otomatik uretilen skill semalari
+# Bunlar makineye ozeldir ve her kurulumda yeniden uretilir.
+# ---------------------------------------------------------------
+.claude/
+.cursor/
+.windsurf/
+.continue/
+.aider*
+
+# MCP sunucu tanimlari (localhost adresi + oturum anahtari icerir)
+.mcp.json
+*.mcp.json
+
+# ---------------------------------------------------------------
+# Editor yerel ayarlari
+# ---------------------------------------------------------------
+.vscode/
+.vsconfig
+.idea/
+
+# ---------------------------------------------------------------
+# Gizli anahtarlar - asla commit edilmemeli
+# ---------------------------------------------------------------
+.env
+.env.*
+*.pem
+*_key
+*_key.txt
+.elevenlabs_key
+.elevanlabs_key

@@ -45,7 +45,7 @@ public class HVManager : MonoBehaviour
             return;
         }
     }
-    durumText.text = "Bağlantı Bekleniyor...";
+    durumText.text = "Waiting for connection...";
         durumText.color = Color.white;
     }
 }

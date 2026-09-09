@@ -75,12 +75,12 @@ public void BaglantiKopart(int probNo)
     }
     if (prob1Pin.grupAdi == prob2Pin.grupAdi)
     {
-        anaEkranText.text = "EVET"; 
+        anaEkranText.text = "YES";
         anaEkranText.color = Color.green;
     }
     else
     {
-        anaEkranText.text = "HAYIR";
+        anaEkranText.text = "NO";
         anaEkranText.color = Color.red;
     }
     }

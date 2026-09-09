@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -34,7 +35,7 @@ namespace GogoGaga.OptimizedRopesAndCables
         public float ropeWidth = 0.1f;
 
         [Header("Collision Settings")]
-        [SerializeField] private bool enableCollision = true;
+        [SerializeField] private bool enableCollision = false;
         [SerializeField] private bool enableGroundRaycast = false;
         [Range(0f, 1f)][SerializeField] private float groundSagStrength = 0.5f;
         [SerializeField] private float groundRaycastLength = 5f;
@@ -105,6 +106,8 @@ namespace GogoGaga.OptimizedRopesAndCables
         private Rigidbody _cachedEndRb;
         private Rigidbody _cachedDragRb;
         private Vector3 _endInitialWorldPos;
+        private readonly RaycastHit[] _castHits = new RaycastHit[24];
+        private readonly HashSet<Collider> _ignoreColliders = new HashSet<Collider>();
 
         public bool IsPrefab => gameObject.scene.rootCount == 0;
 
@@ -130,6 +133,7 @@ namespace GogoGaga.OptimizedRopesAndCables
                 _endInitialWorldPos = _cachedEndRb.position;
             else if (endPoint != null)
                 _endInitialWorldPos = endPoint.position;
+            RebuildIgnoreColliders();
         }
 
         private void OnValidate()
@@ -383,6 +387,59 @@ namespace GogoGaga.OptimizedRopesAndCables
             return startPoint != null && endPoint != null;
         }
 
+        private void RebuildIgnoreColliders()
+        {
+            _ignoreColliders.Clear();
+            AddIgnoreFrom(transform);
+            AddIgnoreFrom(startPoint);
+            AddIgnoreFrom(endPoint);
+            AddIgnoreFrom(dragTarget);
+        }
+
+        private void AddIgnoreFrom(Transform t)
+        {
+            if (t == null)
+                return;
+            var cols = t.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < cols.Length; i++)
+            {
+                if (cols[i] != null)
+                    _ignoreColliders.Add(cols[i]);
+            }
+        }
+
+        private bool ShouldIgnoreHit(Collider col)
+        {
+            if (col == null)
+                return true;
+            if (_ignoreColliders.Contains(col))
+                return true;
+            if (col is CharacterController)
+                return true;
+            return false;
+        }
+
+        private bool CableSphereCast(Vector3 origin, float radius, Vector3 dir, float dist, out RaycastHit hit)
+        {
+            hit = default;
+            int count = Physics.SphereCastNonAlloc(origin, radius, dir, _castHits, dist, collisionLayers, QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue;
+            bool found = false;
+            for (int i = 0; i < count; i++)
+            {
+                var h = _castHits[i];
+                if (ShouldIgnoreHit(h.collider))
+                    continue;
+                if (h.distance < best)
+                {
+                    best = h.distance;
+                    hit = h;
+                    found = true;
+                }
+            }
+            return found;
+        }
+
         private void SetSplinePoint()
         {
             if (lineRenderer.positionCount != linePoints + 1)
@@ -406,7 +463,8 @@ namespace GogoGaga.OptimizedRopesAndCables
                 for (int i = 1 + deadZone; i < linePoints - deadZone; i++)
                 {
                     Vector3 p = cachedPoints[i];
-                    if (Physics.Raycast(p + Vector3.up * 0.2f, Vector3.down, out RaycastHit hit, groundRaycastLength + 0.2f, collisionLayers, QueryTriggerInteraction.Ignore))
+                    if (Physics.Raycast(p + Vector3.up * 0.2f, Vector3.down, out RaycastHit hit, groundRaycastLength + 0.2f, collisionLayers, QueryTriggerInteraction.Ignore)
+                        && !ShouldIgnoreHit(hit.collider))
                     {
                         float targetY = hit.point.y + (ropeWidth / 2f) + collisionOffset;
                         if (p.y < targetY + 1.5f)
@@ -433,7 +491,7 @@ namespace GogoGaga.OptimizedRopesAndCables
                         if (dist > 0.0001f)
                         {
                             dir /= dist;
-                            if (Physics.SphereCast(prev, ropeWidth / 2f, dir, out RaycastHit hit, dist, collisionLayers, QueryTriggerInteraction.Ignore))
+                            if (CableSphereCast(prev, ropeWidth / 2f, dir, dist, out RaycastHit hit))
                                 cachedPoints[i] = hit.point + hit.normal * (ropeWidth / 2f + collisionOffset);
                         }
                     }
@@ -447,7 +505,7 @@ namespace GogoGaga.OptimizedRopesAndCables
                         if (dist > 0.0001f)
                         {
                             dir /= dist;
-                            if (Physics.SphereCast(next, ropeWidth / 2f, dir, out RaycastHit hit, dist, collisionLayers, QueryTriggerInteraction.Ignore))
+                            if (CableSphereCast(next, ropeWidth / 2f, dir, dist, out RaycastHit hit))
                                 cachedPoints[i] = hit.point + hit.normal * (ropeWidth / 2f + collisionOffset);
                         }
                     }
@@ -478,6 +536,7 @@ namespace GogoGaga.OptimizedRopesAndCables
             currentLength = Mathf.Max(currentLength, dist);
 
             float yFactor = (currentLength - dist) / CalculateYFactorAdjustment(midPointWeight);
+            yFactor = Mathf.Clamp(yFactor, 0f, 0.16f);
             midpos.y -= yFactor;
             return midpos;
         }
@@ -509,7 +568,7 @@ namespace GogoGaga.OptimizedRopesAndCables
                     if (dist > 0.0001f)
                     {
                         Vector3 dir = (nextPoint - prevPoint) / dist;
-                        if (Physics.SphereCast(prevPoint, ropeWidth / 2f, dir, out RaycastHit hit, dist, collisionLayers, QueryTriggerInteraction.Ignore))
+                        if (CableSphereCast(prevPoint, ropeWidth / 2f, dir, dist, out RaycastHit hit))
                         {
                             collisionFound = true;
                             if (useNormalForCollision)
@@ -543,8 +602,8 @@ namespace GogoGaga.OptimizedRopesAndCables
                 else
                 {
                     float targetY = maxHitY + collisionOffset;
-                    if (mid.y < targetY) mid.y = targetY;
-                    else mid.y += 0.02f;
+                    if (mid.y < targetY)
+                        mid.y = Mathf.Lerp(mid.y, targetY, 0.4f);
                 }
             }
 

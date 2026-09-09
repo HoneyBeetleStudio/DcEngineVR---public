@@ -32,6 +32,12 @@ public class GorevYoneticisi : MonoBehaviour
     public TMP_Text uyariText;
     public float panelMesafe = 1.6f;
 
+    [Header("Checklist entegrasyonu")]
+    [Tooltip("Assign to let the checklist own the instruction text and receive auto-completion.")]
+    public VRChecklistManager checklist;
+    [Tooltip("Checklist task index for each Adim, in enum order. -1 = no matching task.")]
+    public int[] adimGorevIndeksleri = { -1, -1, -1, -1, -1, -1, -1 };
+
     [Header("Vurgu")]
     public Color vurguRengi = new Color(1f, 0.85f, 0.1f);
 
@@ -46,13 +52,13 @@ public class GorevYoneticisi : MonoBehaviour
 
     static readonly string[] Talimatlar =
     {
-        "Aracı kaldırmak için lift kontrolündeki YEŞİL (yukarı) butona basılı tut.",
-        "Masadaki yüksek gerilim eldivenlerini al ve giy.",
-        "Bataryanın 3 soket bağlantısını tutup çekerek sök. (0/3)",
-        "Taşıyıcı tepsiyi tutamacından tutup aracın altına, bataryanın hizasına çek.",
-        "Tepsinin YEŞİL (yukarı) butonuyla platformu kaldır ve bataryayı al.",
-        "Bataryayı elinle tut, indir ve yeşil GÜVENLİ ALANA bırak.",
-        "GÖREV TAMAMLANDI! Batarya güvenle söküldü."
+        "Press the GREEN (up) button on the lift control to raise the vehicle.",
+        "Pick up the high voltage gloves from the table and put them on.",
+        "Grab and pull to disconnect the battery's 3 cable/socket connections. (0/3)",
+        "The carrier tray is fixed under the vehicle. Press the GREEN (up) button.",
+        "Press the tray's GREEN (up) button so the battery becomes movable.",
+        "Grab the battery with your hand and drop it in the green SAFE ZONE.",
+        "TASK COMPLETE! The battery has been safely removed."
     };
 
     readonly List<Renderer> _vurgulular = new List<Renderer>();
@@ -91,7 +97,7 @@ public class GorevYoneticisi : MonoBehaviour
                     AdimaGec(Adim.SoketleriSok);
                 break;
             case Adim.TepsiyiAracAltinaGetir:
-                if (tepsi != null && (tepsi.AracAltinda || tepsi.BataryaAlindiMi))
+                if (tepsi != null && tepsi.AracAltinda)
                     AdimaGec(Adim.BataryayiAl);
                 break;
             case Adim.BataryayiAl:
@@ -114,18 +120,31 @@ public class GorevYoneticisi : MonoBehaviour
     void SoketSokuldu()
     {
         _sokulenSoket++;
-        if (MevcutAdim == Adim.SoketleriSok && talimatText != null)
-            talimatText.text = Talimatlar[(int)Adim.SoketleriSok].Replace("(0/3)", $"({_sokulenSoket}/{soketler.Length})");
+        if (MevcutAdim == Adim.SoketleriSok)
+        {
+            if (checklist != null)
+                checklist.SetActiveSuffix($"({_sokulenSoket}/{soketler.Length})");
+            else if (talimatText != null)
+                talimatText.text = Talimatlar[(int)Adim.SoketleriSok].Replace("(0/3)", $"({_sokulenSoket}/{soketler.Length})");
+        }
 
         if (_sokulenSoket >= soketler.Length && MevcutAdim == Adim.SoketleriSok)
-            AdimaGec(Adim.TepsiyiAracAltinaGetir);
+        {
+            if (tepsi != null && tepsi.AracAltinda)
+                AdimaGec(Adim.BataryayiAl);
+            else
+                AdimaGec(Adim.TepsiyiAracAltinaGetir);
+        }
     }
 
     void AdimaGec(Adim adim)
     {
+        if (adim != MevcutAdim)
+            GoreviTamamla(MevcutAdim);
+
         MevcutAdim = adim;
 
-        if (talimatText != null)
+        if (talimatText != null && checklist == null)
             talimatText.text = Talimatlar[(int)adim];
 
         bool soketAdimi = adim == Adim.SoketleriSok;
@@ -138,6 +157,9 @@ public class GorevYoneticisi : MonoBehaviour
         if (tepsi != null)
             tepsi.bataryaAlinabilir = adim >= Adim.TepsiyiAracAltinaGetir && adim != Adim.Tamamlandi;
 
+        if (checklist != null)
+            return;
+
         VurguyuAyarla(adim switch
         {
             Adim.AracKaldir => aracLiftButonlari,
@@ -148,6 +170,18 @@ public class GorevYoneticisi : MonoBehaviour
             Adim.GuvenliAlanaCek => guvenliAlanObjesi,
             _ => null
         });
+    }
+
+    void GoreviTamamla(Adim adim)
+    {
+        if (checklist == null || adimGorevIndeksleri == null)
+            return;
+        int i = (int)adim;
+        if (i < 0 || i >= adimGorevIndeksleri.Length)
+            return;
+        int gorev = adimGorevIndeksleri[i];
+        if (gorev >= 0)
+            checklist.CompleteTask(gorev);
     }
 
     public void UyariGoster(string mesaj)

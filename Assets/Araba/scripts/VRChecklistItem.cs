@@ -6,6 +6,14 @@ public class VRChecklistItem : MonoBehaviour
 {
     public Toggle checkbox;
     public TextMeshProUGUI taskText;
+    [HideInInspector] public Color activeColor = new Color(0.16f, 0.85f, 0.95f, 1f);
+    [HideInInspector] public Color lockedColor = new Color(0.10f, 0.28f, 0.34f, 1f);
+    [HideInInspector] public Color doneColor = new Color(0.20f, 0.62f, 0.36f, 1f);
+    private Image card;
+    private void Awake()
+    {
+        card = GetComponent<Image>();
+    }
     private void Start()
     {
         if (checkbox != null)
@@ -40,19 +48,23 @@ public class VRChecklistItem : MonoBehaviour
         if (checkbox.isOn)
         {
             taskText.fontStyle |= FontStyles.Strikethrough;
-            taskText.color = new Color(0.1f, 0.7f, 0.1f, 1f); 
+            taskText.color = new Color(0.93f, 0.98f, 0.94f, 1f);
+            if (card != null)
+                card.color = doneColor;
+        }
+        else if (checkbox.interactable)
+        {
+            taskText.fontStyle &= ~FontStyles.Strikethrough;
+            taskText.color = new Color(0.04f, 0.09f, 0.11f, 1f);
+            if (card != null)
+                card.color = activeColor;
         }
         else
         {
             taskText.fontStyle &= ~FontStyles.Strikethrough;
-            if (checkbox.interactable)
-            {
-                taskText.color = new Color(0f, 0f, 0f, 1f);
-            }
-            else
-            {
-                taskText.color = new Color(0f, 0f, 0f, 0.2f);
-            }
+            taskText.color = new Color(0.68f, 0.80f, 0.84f, 0.75f);
+            if (card != null)
+                card.color = lockedColor;
         }
     }
     private IEnumerator thanosSnapRoutine()

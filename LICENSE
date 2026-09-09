@@ -1,0 +1,87 @@
+# License
+
+This repository contains three kinds of material, and they are licensed
+differently. Read the section that applies to what you intend to use.
+
+---
+
+## 1. Source code — MIT License
+
+Applies to the C# scripts written for this project, namely everything under:
+
+- `Assets/Araba/scripts/`
+- `Assets/Araba/sahne lift/`
+- `Assets/proje/Scripts/`
+
+Copyright (c) 2026 HoneyBeetle Studio
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## 2. Educational content and documentation — CC BY 4.0
+
+Applies to the training material produced by the project:
+
+- `README.md` and the screenshots in `Docs/images/`
+- `Docs/1) EV High-Voltage De-energization & Insulation Test.md`
+- `Docs/2) DC Motor Construction & Operating Principle.md`
+
+Licensed under the Creative Commons Attribution 4.0 International License
+(CC BY 4.0). You are free to share and adapt this material for any purpose,
+including commercially, provided you give appropriate credit to the AR-VET
+project and indicate if changes were made.
+
+Full text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Attribution:
+
+> AR-VET — Revolutionizing VET: AR Training for Electric Cars
+> Project number 2024-1-TR01-KA220-VET-000256976 · https://ar-vet.net/
+
+---
+
+## 3. Third-party assets — NOT covered by the licenses above
+
+This repository includes assets that belong to third parties. They remain
+under their original licenses and are **not** relicensed by this file. Do not
+assume you may redistribute them.
+
+| Location | Origin |
+|---|---|
+| `Assets/VRTemplateAssets/` | Unity VR Template — Unity Companion License |
+| `Assets/Samples/` | Unity XR Interaction Toolkit and XR Hands package samples — Unity Companion License |
+| `Assets/GogoGaga/` | Optimized Ropes and Cables — see `Assets/GogoGaga/OptimizedRopesAndCables/Third-Party Notices.txt` |
+| `Assets/proje/Cosmic_Retro_Laboratory_Props_Demo/` | Third-party asset pack — original vendor terms apply |
+| `Assets/Plugins/` | Third-party libraries and NuGet packages — respective upstream licenses |
+| `Assets/TextMesh Pro/` | Unity TextMesh Pro — Unity Companion License |
+| Models and textures under `Assets/Araba/` and `Assets/proje/Models/` | Mixed origins, including purchased and third-party sourced assets |
+
+If you intend to reuse any part of this repository beyond the source code and
+the documentation listed above, verify the rights for that specific asset
+first.
+
+---
+
+## Funding notice
+
+Funded by the European Union. Views and opinions expressed are however those of
+the author(s) only and do not necessarily reflect those of the European Union
+or the European Education and Culture Executive Agency (EACEA). Neither the
+European Union nor EACEA can be held responsible for them.

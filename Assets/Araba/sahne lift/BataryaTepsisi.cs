@@ -3,7 +3,6 @@ using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-[RequireComponent(typeof(XRGrabInteractable))]
 [RequireComponent(typeof(Rigidbody))]
 public class BataryaTepsisi : MonoBehaviour
 {
@@ -15,7 +14,7 @@ public class BataryaTepsisi : MonoBehaviour
     public Transform guvenliAlan;
 
     [Header("Ayarlar")]
-    public float bolgeYaricapi = 0.9f;
+    public float bolgeYaricapi = 4f;
     public float bataryaAlmaMesafesi = 0.12f;
 
     [Header("Olaylar")]
@@ -40,28 +39,28 @@ public class BataryaTepsisi : MonoBehaviour
 
     public bool bataryaAlinabilir;
 
-    XRGrabInteractable _grab;
     Rigidbody _rb;
-    float _zeminY;
+    Vector3 _sabitPoz;
+    Quaternion _sabitRot;
     bool _guvenliAlanBildirildi;
 
     void Awake()
     {
-        _grab = GetComponent<XRGrabInteractable>();
         _rb = GetComponent<Rigidbody>();
         _rb.isKinematic = true;
-        _zeminY = transform.position.y;
+        _rb.constraints = RigidbodyConstraints.FreezeAll;
+
+        var grab = GetComponent<XRGrabInteractable>();
+        if (grab != null)
+            grab.enabled = false;
+
+        _sabitPoz = transform.position;
+        _sabitRot = transform.rotation;
     }
 
     void LateUpdate()
     {
-        Vector3 poz = transform.position;
-        poz.y = _zeminY;
-        transform.position = poz;
-
-        Vector3 euler = transform.eulerAngles;
-        transform.rotation = Quaternion.Euler(0f, euler.y, 0f);
-
+        transform.SetPositionAndRotation(_sabitPoz, _sabitRot);
         BataryaAlmayiDene();
         GuvenliAlanKontrol();
     }
@@ -77,9 +76,10 @@ public class BataryaTepsisi : MonoBehaviour
         Vector3 fark = bataryaSinir.center - platformSinir.center;
         fark.y = 0f;
 
-        bool zorlaAl = platformLift != null && platformLift.AktifYon == 1;
+        bool tepsiAltinda = fark.magnitude <= bolgeYaricapi;
+        bool zorlaAl = tepsiAltinda && platformLift != null && platformLift.AktifYon == 1;
 
-        if (zorlaAl || (dikeyMesafe <= bataryaAlmaMesafesi && fark.magnitude <= bolgeYaricapi))
+        if (zorlaAl || (dikeyMesafe <= bataryaAlmaMesafesi && tepsiAltinda))
         {
             BataryaAlindiMi = true;
             BataryayiElleTasinabilirYap();
@@ -120,7 +120,7 @@ public class BataryaTepsisi : MonoBehaviour
     {
         if (!BataryaAlindiMi || _guvenliAlanBildirildi)
             return;
-        if (GuvenliAlanda && platformLift != null && platformLift.AlttaMi)
+        if (BataryaGuvenliAlanda)
         {
             _guvenliAlanBildirildi = true;
             guvenliAlanaVarildi?.Invoke();

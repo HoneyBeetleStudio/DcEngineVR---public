@@ -33,13 +33,6 @@ public class KabloGrabHighlight : MonoBehaviour
     {
         _grabInteractable = GetComponent<XRGrabInteractable>();
         _rope = GetComponent<Rope>() ?? GetComponentInParent<Rope>();
-        if (_grabInteractable != null)
-        {
-            _grabInteractable.selectEntered.RemoveListener(OnGrabbed);
-            _grabInteractable.selectExited.RemoveListener(OnReleased);
-            _grabInteractable.selectEntered.AddListener(OnGrabbed);
-            _grabInteractable.selectExited.AddListener(OnReleased);
-        }
     }
     private void Start()
     {
@@ -51,6 +44,8 @@ public class KabloGrabHighlight : MonoBehaviour
     {
         if (_grabInteractable != null)
         {
+            _grabInteractable.selectEntered.RemoveListener(OnGrabbed);
+            _grabInteractable.selectExited.RemoveListener(OnReleased);
             _grabInteractable.selectEntered.AddListener(OnGrabbed);
             _grabInteractable.selectExited.AddListener(OnReleased);
         }
@@ -93,6 +88,9 @@ public class KabloGrabHighlight : MonoBehaviour
             StopCoroutine(_eveDonCoroutine);
             _eveDonCoroutine = null;
         }
+        var rb = GetComponent<Rigidbody>();
+        if (rb != null)
+            rb.isKinematic = false;
         _rope?.SetEndpointHeld(true);
         if (snapTargetlar != null)
         {
